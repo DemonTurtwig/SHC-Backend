@@ -89,6 +89,6 @@ export const getBookingInitializeData = async (req: Request, res: Response): Pro
     });
   } catch (err) {
     console.error('Error in /booking/initialize:', err);
-    res.status(500).json({ message: 'Failed to load booking data.' });
+    res.status(500).json({ message: '데이터를 불러오는데 실패했습니다.' });
   }
 };
