@@ -199,13 +199,13 @@ export const getCurrentUser = async (
 ): Promise<void> => {
   try {
     if (!req.user) {
-      res.status(401).json({ message: 'Unauthorized' });
+      res.status(401).json({ message: '권한이 없습니다.' });
       return;
     }
 
     const user = await User.findOne({ userId: req.user.userId }).select('-password');
     if (!user) {
-      res.status(404).json({ message: 'User not found' });
+      res.status(404).json({ message: '유저를 찾지 못하였습니다.' });
       return;
     }
 
