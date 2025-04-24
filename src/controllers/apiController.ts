@@ -1,4 +1,5 @@
 // src/controllers/authController.ts
+// src/controllers/authController.ts
 import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -82,6 +83,38 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
     res.status(500).json({ message: '서버 오류가 발생했습니다.' });
   }
 };
+
+export const loginUser = async (req: Request, res: Response): Promise<void> => {
+
+  const { email, password } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user || !user.password) {
+      res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+      return;
+    }
+    
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      res.status(401).json({ message: '비밀번호가 일치하지 않습니다.' });
+      return;
+    }
+    
+    const token = jwt.sign(
+      { userId: user.userId, isAdmin: user.isAdmin },
+      process.env.JWT_SECRET!,
+      { expiresIn: '7d' }
+    );
+    
+    res.json({ token });
+  } catch (err) {
+    console.error('Login error:', err);
+    res.status(500).json({ message: '서버 오류로 로그인 실패' });
+  }
+};
+
 
 // POST /api/auth/kakao/login
 export const kakaoLogin = async (req: Request, res: Response): Promise<void> => {
@@ -199,13 +232,13 @@ export const getCurrentUser = async (
 ): Promise<void> => {
   try {
     if (!req.user) {
-      res.status(401).json({ message: '권한이 없습니다.' });
+      res.status(401).json({ message: 'Unauthorized' });
       return;
     }
 
     const user = await User.findOne({ userId: req.user.userId }).select('-password');
     if (!user) {
-      res.status(404).json({ message: '유저를 찾지 못하였습니다.' });
+      res.status(404).json({ message: 'User not found' });
       return;
     }
 
@@ -214,3 +247,4 @@ export const getCurrentUser = async (
     next(err);
   }
 };
+
