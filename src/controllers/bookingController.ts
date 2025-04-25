@@ -25,7 +25,9 @@ export const getBookingInitializeData = async (req: Request, res: Response): Pro
       const enrichedServices = await Promise.all(
         subtype.serviceOptions.map(async (service) => {
           const serviceId = new Types.ObjectId(service._id);
-          const fullService = services.find(s => String(s._id) === String(serviceId))
+          const fullService = services.find(s => String(s._id) === String(serviceId));
+
+          if (!fullService) return null; // skip if not found
 
           const matchedPricings = pricings.filter(p =>
             p.subtype.equals(subtypeId) && p.serviceType.equals(serviceId)
@@ -66,20 +68,22 @@ export const getBookingInitializeData = async (req: Request, res: Response): Pro
           );
 
           return {
-            _id: fullService?._id,
-            name: fullService?.name,
-            label: fullService?.label,
+            _id: fullService._id,
+            name: fullService.name,
+            label: fullService.label,
             tiers,
             options: relatedOptions
           };
         })
       );
 
+      const filteredServices = enrichedServices.filter(svc => svc !== null);
+
       return {
         _id: subtype._id,
         name: subtype.name,
         category: subtype.category,
-        serviceOptions: enrichedServices
+        serviceOptions: filteredServices
       };
     }));
 
