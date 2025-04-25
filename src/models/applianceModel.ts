@@ -20,7 +20,8 @@ const serviceTypeSchema = new Schema<IServiceType>({
   name: { type: String, required: true },
   label: { type: String, required: true }
 });
-export const ServiceType = mongoose.model<IServiceType>('ServiceType', serviceTypeSchema);
+export const ServiceType = mongoose.model<IServiceType>('ServiceType', serviceTypeSchema, 'servicetypes');
+
 
 /* ----------------------------- Subtype ----------------------------- */
 export interface ISubtype extends Document {
@@ -121,5 +122,4 @@ const timeSlotSchema = new Schema<ITimeSlot>({
   slots: [{ type: String }]
 });
 export const TimeSlot = mongoose.model<ITimeSlot>('TimeSlot', timeSlotSchema);
-
 
