@@ -19,7 +19,7 @@ app.use(express.json());
 app.use('/api/kakao', kakaoRoutes);
 
 // Routes
-app.use('/api/auth', authRoutes);
+app.use('/api', authRoutes);
 app.use('/api/admin', adminRoutes);
 
 // Health check
