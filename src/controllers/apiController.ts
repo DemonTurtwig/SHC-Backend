@@ -1,11 +1,11 @@
 // src/controllers/authController.ts
-// src/controllers/authController.ts
 import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User';
 import { getKakaoUserInfo } from '../services/kakaoService';
 import { generateUserId } from '../utils/generateUserId'; 
+import { ServiceType } from '../models/applianceModel';
 
 const JWT_SECRET = process.env.JWT_SECRET as string;
 
@@ -255,4 +255,9 @@ export const deleteUser = async (req: Request, res: Response) => {
   } catch (err) {
     res.status(500).json({ message: '계정 삭제 실패' });
   }
+};
+
+export const getAllServiceTypes = async (req: Request, res: Response) => {
+  const serviceTypes = await ServiceType.find();
+  res.json(serviceTypes);
 };
