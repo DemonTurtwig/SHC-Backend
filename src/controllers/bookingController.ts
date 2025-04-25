@@ -82,9 +82,11 @@ export const getBookingInitializeData = async (req: Request, res: Response): Pro
       return {
         _id: subtype._id,
         name: subtype.name,
+        iconUrl: subtype.iconUrl,
         category: subtype.category,
         serviceOptions: filteredServices
       };
+      
     }));
 
     res.json({
@@ -96,3 +98,4 @@ export const getBookingInitializeData = async (req: Request, res: Response): Pro
     res.status(500).json({ message: '데이터를 불러오는데 실패했습니다.' });
   }
 };
+
