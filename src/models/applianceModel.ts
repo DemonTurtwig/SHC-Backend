@@ -27,12 +27,14 @@ export interface ISubtype extends Document {
   name: string;
   category: mongoose.Types.ObjectId;
   serviceOptions: mongoose.Types.ObjectId[];
+  iconUrl: string;
 }
 
 const subtypeSchema = new Schema<ISubtype>({
   name: { type: String, required: true },
   category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
-  serviceOptions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'ServiceType' }]
+  serviceOptions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'ServiceType' }],
+  iconUrl: { type: String, required: false },
 });
 export const Subtype = mongoose.model<ISubtype>('Subtype', subtypeSchema);
 
@@ -119,4 +121,5 @@ const timeSlotSchema = new Schema<ITimeSlot>({
   slots: [{ type: String }]
 });
 export const TimeSlot = mongoose.model<ITimeSlot>('TimeSlot', timeSlotSchema);
+
 
