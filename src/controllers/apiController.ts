@@ -1,4 +1,5 @@
 // src/controllers/authController.ts
+// src/controllers/authController.ts
 import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -247,3 +248,11 @@ export const getCurrentUser = async (
   }
 };
 
+export const deleteUser = async (req: Request, res: Response) => {
+  try {
+    await User.findByIdAndDelete(req.user?.userId); // or req.user._id depending on middleware
+    res.status(200).json({ message: 'User deleted' });
+  } catch (err) {
+    res.status(500).json({ message: '계정 삭제 실패' });
+  }
+};
