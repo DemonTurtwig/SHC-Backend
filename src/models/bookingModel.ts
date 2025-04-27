@@ -1,6 +1,6 @@
 import mongoose, { Schema, model, Types } from 'mongoose';
 
-// Booking Option
+
 interface IBookingOption {
   option: Types.ObjectId;
   choice: string;
@@ -11,7 +11,8 @@ interface IBooking {
   isGuest: boolean;
   subtype: Types.ObjectId;
   serviceType: Types.ObjectId;
-  timeSlot: Types.ObjectId;
+  reservationDate: string; // YYYY-MM-DD format
+  reservationTime: string; // e.g., "06:30"
   options: IBookingOption[];
   status: '대기' | '확정' | '완료' | '취소';
   totalPrice: number;
@@ -28,7 +29,8 @@ const BookingSchema = new Schema<IBooking>({
   isGuest: { type: Boolean, default: false },
   subtype: { type: Schema.Types.ObjectId, ref: 'SubType', required: true },
   serviceType: { type: Schema.Types.ObjectId, ref: 'ServiceType', required: true },
-  timeSlot: { type: Schema.Types.ObjectId, ref: 'TimeSlot', required: true },
+  reservationDate: { type: String, required: true },
+  reservationTime: { type: String, required: true },
   options: { type: [BookingOptionSchema], default: [] },
   status: { type: String, enum: ['대기', '확정', '완료', '취소'], default: '대기' },
   totalPrice: { type: Number, required: true },
@@ -36,4 +38,3 @@ const BookingSchema = new Schema<IBooking>({
 });
 
 export default model<IBooking>('Booking', BookingSchema);
-
