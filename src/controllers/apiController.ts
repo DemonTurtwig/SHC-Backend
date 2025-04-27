@@ -1,4 +1,4 @@
-// src/controllers/apiController.ts
+// src/controllers/authController.ts
 import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -7,7 +7,7 @@ import { getKakaoUserInfo } from '../services/kakaoService';
 import { generateUserId } from '../utils/generateUserId'; 
 import { ServiceType } from '../models/applianceModel';
 import Booking from '../models/bookingModel';
-import TimeSlot from '../models/bookingModel';
+import { TimeSlot } from '../models/timeslotModel';
 
 const JWT_SECRET = process.env.JWT_SECRET as string;
 
@@ -118,21 +118,23 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
 };
 
 // Get all time slots
-export const getAllTimeSlots = async (req: Request, res: Response) : Promise <void>=> {
+export const getAllTimeSlots = async (req: Request, res: Response) => {
   try {
-    const timeslotDoc = await TimeSlot.findOne({});
-    
-    if (!timeslotDoc) {
-      console.error('❌ No timeslot document found');
-       res.json([]);
-       return
+    const docs = await TimeSlot.find({});
+    console.log('✅ ALL timeslots fetched:', docs);
+
+    if (docs.length === 0) {
+      console.error('❌ No timeslot documents in collection');
+      return res.json([]);
     }
-    res.json(timeslotDoc.timeSlot);
+
+    res.json(docs[0].slots);
   } catch (err) {
-    console.error('Failed to fetch timeslots:', err);
+    console.error('❌ Failed to fetch timeslots:', err);
     res.status(500).json({ message: 'Failed to fetch timeslots' });
   }
 };
+
 
 // POST /api/auth/kakao/login
 export const kakaoLogin = async (req: Request, res: Response): Promise<void> => {
@@ -282,3 +284,5 @@ export const createBooking = async (req: Request, res: Response) : Promise<void>
     res.status(500).json({ message: '예약 생성에 실패했습니다.' });
   }
 };
+
+
