@@ -1,5 +1,4 @@
 // src/controllers/apiController.ts
-// src/controllers/authController.ts
 import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -250,14 +249,14 @@ export const getAllServiceTypes = async (req: Request, res: Response) => {
   res.json(serviceTypes);
 };
 
-export const createBooking = async (req: Request, res: Response): Promise<void> => {
-  const { subtypeId, serviceTypeId, tier, options, reservationDate } = req.body;
+export const createBooking = async (req: Request, res: Response) : Promise<void>=> {
+  const { subtypeId, serviceTypeId, tier, options, reservationDate, timeSlot } = req.body;
 
   try {
-    const existingBooking = await Booking.findOne({ reservationDate });
+    const existingBooking = await Booking.findOne({ reservationDate, timeSlot });
     if (existingBooking) {
       res.status(400).json({ message: '이미 해당 시간에 예약이 존재합니다.' });
-      return;
+      return; 
     }
 
     const newBooking = new Booking({
@@ -265,6 +264,7 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
       serviceType: serviceTypeId,
       tier,
       options,
+      timeSlot,
       reservationDate,
     });
 
@@ -276,3 +276,4 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
     res.status(500).json({ message: '예약 생성에 실패했습니다.' });
   }
 };
+
