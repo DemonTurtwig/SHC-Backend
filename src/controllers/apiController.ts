@@ -7,7 +7,7 @@ import { getKakaoUserInfo } from '../services/kakaoService';
 import { generateUserId } from '../utils/generateUserId'; 
 import { ServiceType } from '../models/applianceModel';
 import Booking from '../models/bookingModel';
-import Timeslot from '../models/bookingModel';
+import TimeSlot from '../models/bookingModel';
 
 const JWT_SECRET = process.env.JWT_SECRET as string;
 
@@ -118,14 +118,15 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
 };
 
 // Get all time slots
-export const getAllTimeSlots = async (req, res) => {
+export const getAllTimeSlots = async (req: Request, res: Response) : Promise <void>=> {
   try {
     const timeslotDoc = await TimeSlot.findOne({ type: 'generic' });
     if (!timeslotDoc) {
       console.error('❌ No timeslot document found');
-      return res.json([]);
+       res.json([]);
+       return
     }
-    res.json(timeslotDoc.slots);
+    res.json(timeslotDoc.timeSlot);
   } catch (err) {
     console.error('Failed to fetch timeslots:', err);
     res.status(500).json({ message: 'Failed to fetch timeslots' });
@@ -280,4 +281,3 @@ export const createBooking = async (req: Request, res: Response) : Promise<void>
     res.status(500).json({ message: '예약 생성에 실패했습니다.' });
   }
 };
-
