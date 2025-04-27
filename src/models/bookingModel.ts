@@ -52,7 +52,7 @@ const TimeSlotSchema = new Schema<ITimeSlot>({
   ]
 });
 
-export const TimeSlot = (mongoose.models.TimeSlot as mongoose.Model<ITimeSlot>) || model<ITimeSlot>('TimeSlot', TimeSlotSchema);
+export const TimeSlot = (mongoose.models.TimeSlot as mongoose.Model<ITimeSlot>) || model<ITimeSlot>('TimeSlot', TimeSlotSchema, 'timeslots');
 
 export default model<IBooking>('Booking', BookingSchema);
 
