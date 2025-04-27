@@ -34,4 +34,23 @@ const BookingSchema = new Schema<IBooking>({
   createdAt:  { type: Date, default: Date.now }
 });
 
+interface ITimeSlot {
+  date: Date | null;
+  type: string;  // e.g. 'generic'
+  slots: { time: string }[]; // Array of { time: '06:00' }
+}
+
+const TimeSlotSchema = new Schema<ITimeSlot>({
+  date: { type: Date, default: null },
+  type: { type: String, required: true },
+  slots: [
+    {
+      time: { type: String, required: true }
+    }
+  ]
+});
+
+export const TimeSlot = model<ITimeSlot>('TimeSlot', TimeSlotSchema);
+
+
 export default model<IBooking>('Booking', BookingSchema);
