@@ -120,7 +120,8 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
 // Get all time slots
 export const getAllTimeSlots = async (req: Request, res: Response) : Promise <void>=> {
   try {
-    const timeslotDoc = await TimeSlot.findOne({ type: 'generic' });
+    const timeslotDoc = await TimeSlot.findOne({});
+    
     if (!timeslotDoc) {
       console.error('❌ No timeslot document found');
        res.json([]);
