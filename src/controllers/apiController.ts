@@ -1,3 +1,4 @@
+// src/controllers/apiController.ts
 // src/controllers/authController.ts
 import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
@@ -6,6 +7,8 @@ import User from '../models/User';
 import { getKakaoUserInfo } from '../services/kakaoService';
 import { generateUserId } from '../utils/generateUserId'; 
 import { ServiceType } from '../models/applianceModel';
+import Booking from '../models/bookingModel';
+import Timeslot from '../models/bookingModel';
 
 const JWT_SECRET = process.env.JWT_SECRET as string;
 
@@ -115,6 +118,16 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+// Get all time slots
+export const getAllTimeSlots = async (req: Request, res: Response) => {
+  try {
+    const timeslots = await Timeslot.find();
+    res.json(timeslots);
+  } catch (err) {
+    console.error('Failed to fetch timeslots:', err);
+    res.status(500).json({ message: '정보를 불러오는데 실패했습니다.' });
+  }
+};
 
 // POST /api/auth/kakao/login
 export const kakaoLogin = async (req: Request, res: Response): Promise<void> => {
@@ -199,31 +212,6 @@ export const getPricing = async (req: Request, res: Response): Promise<void> => 
   }
 };
 
-// --- POST /api/booking
-import Booking from '../models/bookingModel';
-
-export const createBooking = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const {
-      user, subtype, serviceType, timeSlot, options
-    } = req.body;
-
-    const booking = new Booking({
-      user,
-      subtype,
-      serviceType,
-      timeSlot,
-      options
-    });
-
-    await booking.save();
-    res.status(201).json({ message: '예약이 완료되었습니다.', bookingId: booking._id });
-  } catch (err) {
-    console.error('Error creating booking:', err);
-    res.status(500).json({ message: '예약 처리 중 오류가 발생했습니다.' });
-  }
-
-};
 
 export const getCurrentUser = async (
   req: Request,
@@ -232,13 +220,13 @@ export const getCurrentUser = async (
 ): Promise<void> => {
   try {
     if (!req.user) {
-      res.status(401).json({ message: 'Unauthorized' });
+      res.status(401).json({ message: '권한이 없습니다.' });
       return;
     }
 
     const user = await User.findOne({ userId: req.user.userId }).select('-password');
     if (!user) {
-      res.status(404).json({ message: 'User not found' });
+      res.status(404).json({ message: '유저를 찾지 못하였습니다.' });
       return;
     }
 
@@ -251,7 +239,7 @@ export const getCurrentUser = async (
 export const deleteUser = async (req: Request, res: Response) => {
   try {
     await User.findByIdAndDelete(req.user?.userId); // or req.user._id depending on middleware
-    res.status(200).json({ message: 'User deleted' });
+    res.status(200).json({ message: '유저 삭제 성공!' });
   } catch (err) {
     res.status(500).json({ message: '계정 삭제 실패' });
   }
@@ -260,4 +248,31 @@ export const deleteUser = async (req: Request, res: Response) => {
 export const getAllServiceTypes = async (req: Request, res: Response) => {
   const serviceTypes = await ServiceType.find();
   res.json(serviceTypes);
+};
+
+export const createBooking = async (req: Request, res: Response): Promise<void> => {
+  const { subtypeId, serviceTypeId, tier, options, reservationDate } = req.body;
+
+  try {
+    const existingBooking = await Booking.findOne({ reservationDate });
+    if (existingBooking) {
+      res.status(400).json({ message: '이미 해당 시간에 예약이 존재합니다.' });
+      return;
+    }
+
+    const newBooking = new Booking({
+      subtype: subtypeId,
+      serviceType: serviceTypeId,
+      tier,
+      options,
+      reservationDate,
+    });
+
+    await newBooking.save();
+    res.status(201).json({ message: '예약이 완료되었습니다.' });
+
+  } catch (err) {
+    console.error('Booking creation error:', err);
+    res.status(500).json({ message: '예약 생성에 실패했습니다.' });
+  }
 };
