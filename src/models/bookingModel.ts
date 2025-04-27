@@ -35,24 +35,5 @@ const BookingSchema = new Schema<IBooking>({
   createdAt: { type: Date, default: Date.now },
 });
 
-// TimeSlot
-interface ITimeSlot {
-  date: Date | null;
-  type: string;
-  slots: { time: string }[];
-}
-
-const TimeSlotSchema = new Schema<ITimeSlot>({
-  date: { type: Date, default: null },
-  type: { type: String, required: true },
-  slots: [
-    {
-      time: { type: String, required: true }
-    }
-  ]
-});
-
-export const TimeSlot = (mongoose.models.TimeSlot as mongoose.Model<ITimeSlot>) || model<ITimeSlot>('TimeSlot', TimeSlotSchema, 'timeslots');
-
 export default model<IBooking>('Booking', BookingSchema);
 
