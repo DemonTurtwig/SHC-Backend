@@ -118,14 +118,15 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
 };
 
 // Get all time slots
-export const getAllTimeSlots = async (req: Request, res: Response) => {
+export const getAllTimeSlots = async (req: Request, res: Response) : Promise<void> => {
   try {
     const docs = await TimeSlot.find({});
     console.log('✅ ALL timeslots fetched:', docs);
 
     if (docs.length === 0) {
       console.error('❌ No timeslot documents in collection');
-      return res.json([]);
+      res.json([]);
+      return; 
     }
 
     res.json(docs[0].slots);
@@ -284,5 +285,4 @@ export const createBooking = async (req: Request, res: Response) : Promise<void>
     res.status(500).json({ message: '예약 생성에 실패했습니다.' });
   }
 };
-
 
