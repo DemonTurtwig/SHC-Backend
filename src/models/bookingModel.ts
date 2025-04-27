@@ -1,4 +1,5 @@
-import { Schema, model, Types } from 'mongoose';
+import mongoose, { Schema, model, Types } from 'mongoose';
+
 
 interface IBookingOption {
   option: Types.ObjectId;  // FK → Option
@@ -36,8 +37,8 @@ const BookingSchema = new Schema<IBooking>({
 
 interface ITimeSlot {
   date: Date | null;
-  type: string;  // e.g. 'generic'
-  slots: { time: string }[]; // Array of { time: '06:00' }
+  type: string;
+  slots: { time: string }[];
 }
 
 const TimeSlotSchema = new Schema<ITimeSlot>({
@@ -49,6 +50,13 @@ const TimeSlotSchema = new Schema<ITimeSlot>({
     }
   ]
 });
+
+export const TimeSlot = (mongoose.models.TimeSlot as mongoose.Model<ITimeSlot>) || model<ITimeSlot>('TimeSlot', TimeSlotSchema);
+
+
+export default model<IBooking>('Booking', BookingSchema);
+
+
 
 export const TimeSlot = model<ITimeSlot>('TimeSlot', TimeSlotSchema);
 
