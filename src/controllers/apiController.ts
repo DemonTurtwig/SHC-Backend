@@ -258,14 +258,14 @@ export const getAllServiceTypes = async (req: Request, res: Response) => {
   res.json(serviceTypes);
 };
 
-export const createBooking = async (req: Request, res: Response) : Promise<void>=> {
-  const { subtypeId, serviceTypeId, tier, options, reservationDate, timeSlot } = req.body;
+export const createBooking = async (req: Request, res: Response): Promise<void> => {
+  const { subtypeId, serviceTypeId, tier, options, reservationDate, reservationTime, totalPrice} = req.body;
 
   try {
-    const existingBooking = await Booking.findOne({ reservationDate, timeSlot });
+    const existingBooking = await Booking.findOne({ reservationDate, reservationTime });
     if (existingBooking) {
-      res.status(400).json({ message: '이미 해당 시간에 예약이 존재합니다.' });
-      return; 
+      res.status(400).json({ message: '이미 해당 날짜와 시간에 예약이 존재합니다.' });
+      return;
     }
 
     const newBooking = new Booking({
@@ -273,8 +273,9 @@ export const createBooking = async (req: Request, res: Response) : Promise<void>
       serviceType: serviceTypeId,
       tier,
       options,
-      timeSlot,
       reservationDate,
+      reservationTime,
+      totalPrice,
     });
 
     await newBooking.save();
@@ -285,4 +286,5 @@ export const createBooking = async (req: Request, res: Response) : Promise<void>
     res.status(500).json({ message: '예약 생성에 실패했습니다.' });
   }
 };
+
 
