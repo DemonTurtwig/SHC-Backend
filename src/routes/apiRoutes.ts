@@ -4,10 +4,7 @@ import { registerUser, createBooking, kakaoLogin, getOptions, getPricing, getCur
 import { requireAuth } from '../middleware/authMiddleware';
 import { getBookingInitializeData } from '../controllers/bookingController';
 
-
-
 const router = express.Router();
-
 
 router.post('/register', registerUser);
 router.post('/kakao/login', kakaoLogin);
