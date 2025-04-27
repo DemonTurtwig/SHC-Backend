@@ -118,13 +118,17 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
 };
 
 // Get all time slots
-export const getAllTimeSlots = async (req: Request, res: Response) => {
+export const getAllTimeSlots = async (req, res) => {
   try {
-    const timeslots = await Timeslot.find();
-    res.json(timeslots);
+    const timeslotDoc = await TimeSlot.findOne({ type: 'generic' });
+    if (!timeslotDoc) {
+      console.error('❌ No timeslot document found');
+      return res.json([]);
+    }
+    res.json(timeslotDoc.slots);
   } catch (err) {
     console.error('Failed to fetch timeslots:', err);
-    res.status(500).json({ message: '정보를 불러오는데 실패했습니다.' });
+    res.status(500).json({ message: 'Failed to fetch timeslots' });
   }
 };
 
