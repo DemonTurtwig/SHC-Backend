@@ -317,7 +317,7 @@ export const getUserBookingHistory = async (req: Request, res: Response): Promis
   try {
     const bookings = await Booking.find({
       user: req.user?.userId ?? null
-    }).select('serviceType reservationDate reservationTime name');
+    }).select('serviceType reservationDate reservationTime totalPrice');
 
     res.json(bookings);
   } catch (err) {
