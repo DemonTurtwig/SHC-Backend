@@ -1,4 +1,4 @@
-// src/controllers/authController.ts
+// src/controllers/apiController.ts
 import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -105,10 +105,11 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
     }
     
     const token = jwt.sign(
-      { userId: user.userId, isAdmin: user.isAdmin },
+      { _id: user._id, userId: user.userId }, 
       process.env.JWT_SECRET!,
       { expiresIn: '7d' }
     );
+    
     
     res.json({ token });
   } catch (err) {
@@ -121,10 +122,10 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
 export const getAllTimeSlots = async (req: Request, res: Response) : Promise<void> => {
   try {
     const docs = await TimeSlot.find({});
-    console.log('✅ 모든 시간 슬롯을 가져왔습니다:', docs);
+    console.log('✅ ALL timeslots fetched:', docs);
 
     if (docs.length === 0) {
-      console.error('❌ 컬렉션에 시간 슬롯이 없습니다');
+      console.error('❌ No timeslot documents in collection');
       res.json([]);
       return; 
     }
@@ -132,7 +133,7 @@ export const getAllTimeSlots = async (req: Request, res: Response) : Promise<voi
     res.json(docs[0].slots);
   } catch (err) {
     console.error('❌ Failed to fetch timeslots:', err);
-    res.status(500).json({ message: '정보를 가져오는데 실패했습니다' });
+    res.status(500).json({ message: 'Failed to fetch timeslots' });
   }
 };
 
@@ -160,11 +161,10 @@ export const kakaoLogin = async (req: Request, res: Response): Promise<void> => 
 
     // issue JWT
     const token = jwt.sign(
-  { _id: user._id, userId: user.userId }, 
-  process.env.JWT_SECRET!,
-  { expiresIn: '7d' }
-);
-
+      { userId: user._id, isAdmin: user.isAdmin },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
     res.json({ token });
   } catch (err) {
     console.error('Kakao login error:', err);
@@ -233,7 +233,8 @@ export const getCurrentUser = async (
       return;
     }
 
-    const user = await User.findOne({ userId: req.user.userId }).select('-password');
+    const user = await User.findById(req.user?._id).select('-password');
+
     if (!user) {
       res.status(404).json({ message: '유저를 찾지 못하였습니다.' });
       return;
@@ -287,4 +288,19 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
     console.error('Booking creation error:', err);
     res.status(500).json({ message: '예약 생성에 실패했습니다.' });
   }
+};
+
+export const getMyBookings = async (req: Request, res: Response) => {
+  const { from, to } = req.query;
+  const userId = (req as any).user?.userId;
+
+  if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+
+  const criteria: any = { user: userId };
+  if (from && to) criteria.reservationDate = { $gte: from, $lte: to };
+
+  const docs = await Booking.find(criteria)
+               .populate('serviceType', 'label')   // returns label only
+               .lean();
+  res.json(docs);
 };
