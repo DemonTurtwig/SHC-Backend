@@ -158,7 +158,12 @@ export const kakaoLogin = async (req: Request, res: Response): Promise<void> => 
 
     // issue JWT
     const token = jwt.sign(
-      { userId: user._id, isAdmin: user.isAdmin },
+      {
+        _id: user._id,
+        userId: user.userId,
+        isAdmin: user.isAdmin,
+        isGuest: user.isGuest ?? false,
+      },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -315,30 +320,34 @@ export const getMyBookings = async (req: Request, res: Response) => {
 
 export const getUserBookingHistory = async (req: Request, res: Response): Promise<void> => {
   try {
-    
+    // ✅ Log the incoming user information
     console.log('Received user info from token:', req.user);
 
     if (!req.user?.userId) {
       console.error('No userId found in req.user.');
-      res.status(400).json({ message: 'Invalid user information.' });
-    return 
+     res.status(400).json({ message: 'Invalid user information.' });
+     return
     }
 
-    const userId = Number(req.user.userId);
+    const userId = Number(req.user.userId);  // 🔥 Force number cast to match Mongo
 
     console.log('Searching for bookings with userId:', userId);
 
-    const bookings = await Booking.find({
-      user: userId
-    })
-    .select('serviceType reservationDate reservationTime totalPrice status')
-    .sort({ reservationDate: -1, reservationTime: -1 });
+    const bookings = await Booking.find({ user: userId })
+      .populate('serviceType', 'label')
+      .select('serviceType reservationDate reservationTime totalPrice status')
+      .sort({ reservationDate: -1, reservationTime: -1 })
+      .lean();
 
-    console.log('Fetched bookings from DB:', bookings);
-
-    res.json(bookings);
+    // flatten serviceType so the app doesn’t need to drill into it
+    res.json(
+      bookings.map(b => ({
+        ...b,
+        serviceLabel: (b.serviceType as any).label,
+      }))
+    );
   } catch (err) {
-    console.error('Failed to fetch user booking history:', err);
+    console.error(err);
     res.status(500).json({ message: '예약 내역을 불러오지 못했습니다.' });
   }
 };
