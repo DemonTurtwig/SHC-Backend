@@ -102,7 +102,7 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
     }
     
     const token = jwt.sign(
-      {userId: user.userId }, 
+      { _id: user._id, userId: user.userId }, 
       process.env.JWT_SECRET!,
       { expiresIn: '7d' }
     );
@@ -230,7 +230,7 @@ export const getCurrentUser = async (
       return;
     }
 
-    const user = await User.findById(req.user?.userId).select('-password');
+    const user = await User.findById(req.user._id).select('-password');
 
     if (!user) {
       res.status(404).json({ message: '유저를 찾지 못하였습니다.' });
@@ -245,7 +245,7 @@ export const getCurrentUser = async (
 
 export const deleteUser = async (req: Request, res: Response) => {
   try {
-    await User.findByIdAndDelete(req.user?.userId); // or req.user._id depending on middleware
+    await User.findByIdAndDelete(req.user?.userId);
     res.status(200).json({ message: '유저 삭제 성공!' });
   } catch (err) {
     res.status(500).json({ message: '계정 삭제 실패' });
@@ -317,7 +317,7 @@ export const getUserBookingHistory = async (req: Request, res: Response): Promis
   try {
     const bookings = await Booking.find({
       user: req.user?.userId ?? null
-    }).select('serviceType reservationDate reservationTime totalPrice');
+    }).select('serviceType reservationDate reservationTime name');
 
     res.json(bookings);
   } catch (err) {
