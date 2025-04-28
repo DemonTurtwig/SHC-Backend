@@ -331,7 +331,7 @@ export const getUserBookingHistory = async (req: Request, res: Response): Promis
     const bookings = await Booking.find({
       user: userId
     })
-    .select('serviceType reservationDate reservationTime totalPrice')
+    .select('serviceType reservationDate reservationTime totalPrice status')
     .sort({ reservationDate: -1, reservationTime: -1 });
 
     console.log('Fetched bookings from DB:', bookings);
