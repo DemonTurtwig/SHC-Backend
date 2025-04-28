@@ -11,9 +11,6 @@ import { TimeSlot } from '../models/timeslotModel';
 
 const JWT_SECRET = process.env.JWT_SECRET as string;
 
-// POST /api/auth/register
-// If req.body.isGuest === true, registers a guest user.
-// Otherwise does a normal email+password signup.
 export const registerUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const {
@@ -104,13 +101,8 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
       return;
     }
     
-   const token = jwt.sign(
-      {
-        _id: user._id,
-        userId: user.userId,
-        isAdmin: user.isAdmin,
-        isGuest: user.isGuest,
-      },
+    const token = jwt.sign(
+      { _id: user._id, userId: user.userId }, 
       process.env.JWT_SECRET!,
       { expiresIn: '7d' }
     );
@@ -323,9 +315,10 @@ export const getMyBookings = async (req: Request, res: Response) => {
 
 export const getUserBookingHistory = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = req.user?.userId ? Number(req.user.userId) : null;
-    console.log('UserID from token:', req.user?.userId);
-    const bookings = await Booking.find({user: userId}).select('serviceType reservationDate reservationTime name');
+    const bookings = await Booking.find({
+      user: req.user?.userId ?? null
+    }).select('serviceType reservationDate reservationTime name');
+
     res.json(bookings);
   } catch (err) {
     console.error('Failed to fetch user booking history', err);
