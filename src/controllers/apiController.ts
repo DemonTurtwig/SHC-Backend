@@ -269,6 +269,7 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
     }
 
     const newBooking = new Booking({
+      user:  (req as any).user?.userId ?? null,
       subtype: subtypeId,
       serviceType: serviceTypeId,
       tier,
@@ -286,5 +287,3 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
     res.status(500).json({ message: '예약 생성에 실패했습니다.' });
   }
 };
-
-
