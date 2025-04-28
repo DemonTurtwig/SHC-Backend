@@ -318,10 +318,8 @@ export const getMyBookings = async (req: Request, res: Response) => {
 
 export const getUserBookingHistory = async (req: Request, res: Response): Promise<void> => {
   try {
-    const bookings = await Booking.find({
-      user: req.user?.userId ?? null   // only user's own bookings
-    }).select('serviceType reservationDate reservationTime name');
-
+    const userId = req.user?.userId ? Number(req.user.userId) : null;
+    const bookings = await Booking.find({user: userId}).select('serviceType reservationDate reservationTime name');
     res.json(bookings);
   } catch (err) {
     console.error('Failed to fetch user booking history', err);
