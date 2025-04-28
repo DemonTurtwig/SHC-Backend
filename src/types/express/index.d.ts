@@ -11,7 +11,6 @@ declare global {
 declare module 'express-serve-static-core' {
   interface Request {
     user?: {
-      _id: string;
       userId: string;
       isAdmin: boolean;
       isGuest: boolean;
