@@ -121,10 +121,10 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
 export const getAllTimeSlots = async (req: Request, res: Response) : Promise<void> => {
   try {
     const docs = await TimeSlot.find({});
-    console.log('✅ ALL timeslots fetched:', docs);
+    console.log('✅ 모든 시간 슬롯을 가져왔습니다:', docs);
 
     if (docs.length === 0) {
-      console.error('❌ No timeslot documents in collection');
+      console.error('❌ 컬렉션에 시간 슬롯이 없습니다');
       res.json([]);
       return; 
     }
@@ -132,7 +132,7 @@ export const getAllTimeSlots = async (req: Request, res: Response) : Promise<voi
     res.json(docs[0].slots);
   } catch (err) {
     console.error('❌ Failed to fetch timeslots:', err);
-    res.status(500).json({ message: 'Failed to fetch timeslots' });
+    res.status(500).json({ message: '정보를 가져오는데 실패했습니다' });
   }
 };
 
@@ -160,10 +160,11 @@ export const kakaoLogin = async (req: Request, res: Response): Promise<void> => 
 
     // issue JWT
     const token = jwt.sign(
-      { userId: user._id, isAdmin: user.isAdmin },
-      JWT_SECRET,
-      { expiresIn: '7d' }
-    );
+  { _id: user._id, userId: user.userId }, 
+  process.env.JWT_SECRET!,
+  { expiresIn: '7d' }
+);
+
     res.json({ token });
   } catch (err) {
     console.error('Kakao login error:', err);
