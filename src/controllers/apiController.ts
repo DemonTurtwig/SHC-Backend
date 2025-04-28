@@ -315,3 +315,16 @@ export const getMyBookings = async (req: Request, res: Response) => {
                .lean();
   res.json(docs);
 };
+
+export const getUserBookingHistory = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const bookings = await Booking.find({
+      user: req.user?.userId ?? null   // only user's own bookings
+    }).select('serviceType reservationDate reservationTime name');
+
+    res.json(bookings);
+  } catch (err) {
+    console.error('Failed to fetch user booking history', err);
+    res.status(500).json({ message: '예약 내역을 불러오지 못했습니다.' });
+  }
+};
