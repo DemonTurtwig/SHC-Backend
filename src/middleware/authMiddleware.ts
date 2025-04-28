@@ -25,6 +25,7 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction): vo
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
 
     req.user = {
+      _id: decoded._id,
       userId: decoded.userId,
       isAdmin: decoded.isAdmin,
       isGuest: decoded.isGuest,
