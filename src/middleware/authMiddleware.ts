@@ -5,6 +5,7 @@ declare global {
   namespace Express {
     interface Request {
       user?: {
+        _id: string;
         userId: string;
         isAdmin: boolean;
         isGuest: boolean;
@@ -24,6 +25,7 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction): vo
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
 
     req.user = {
+      _id: decoded._id,
       userId: decoded.userId,
       isAdmin: decoded.isAdmin,
       isGuest: decoded.isGuest,
@@ -34,14 +36,5 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction): vo
     res.status(403).json({ message: 'Invalid token' });
     return;
   }
-};
-
-
-export const requireAdmin = (req: Request, res: Response, next: NextFunction): void => {
-  if (!req.user?.isAdmin) {
-    res.status(403).json({ message: '관리자 권한이 필요합니다.' });
-    return; 
-  }
-  next();
 };
 
