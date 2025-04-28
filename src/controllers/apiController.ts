@@ -315,13 +315,29 @@ export const getMyBookings = async (req: Request, res: Response) => {
 
 export const getUserBookingHistory = async (req: Request, res: Response): Promise<void> => {
   try {
+    
+    console.log('Received user info from token:', req.user);
+
+    if (!req.user?.userId) {
+      console.error('No userId found in req.user.');
+      return res.status(400).json({ message: 'Invalid user information.' });
+    }
+
+    const userId = Number(req.user.userId);
+
+    console.log('Searching for bookings with userId:', userId);
+
     const bookings = await Booking.find({
-      user: req.user?.userId ?? null
-    }).select('serviceType reservationDate reservationTime totalPrice');
+      user: userId
+    })
+    .select('serviceType reservationDate reservationTime totalPrice')
+    .sort({ reservationDate: -1, reservationTime: -1 });
+
+    console.log('Fetched bookings from DB:', bookings);
 
     res.json(bookings);
   } catch (err) {
-    console.error('Failed to fetch user booking history', err);
+    console.error('Failed to fetch user booking history:', err);
     res.status(500).json({ message: '예약 내역을 불러오지 못했습니다.' });
   }
 };
