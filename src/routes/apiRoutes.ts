@@ -11,7 +11,7 @@ router.post('/kakao/login', kakaoLogin);
 router.post('/login', loginUser);
 router.get('/options', getOptions);       
 router.get('/pricing', getPricing);
-router.post('/booking', createBooking);
+router.post('/booking', requireAuth, createBooking);
 router.get('/timeslots', getAllTimeSlots);
 router.get('/users/me', requireAuth, getCurrentUser);
 router.get('/booking/initialize', getBookingInitializeData);
