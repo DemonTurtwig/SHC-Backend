@@ -261,7 +261,7 @@ export const getAllServiceTypes = async (req: Request, res: Response) => {
 };
 
 export const createBooking = async (req: Request, res: Response): Promise<void> => {
-  const { subtypeId, serviceTypeId, tier, options, reservationDate, reservationTime, totalPrice} = req.body;
+  const { subtypeId, serviceTypeId, tier, options, reservationDate, reservationTime, totalPrice } = req.body;
 
   try {
     const existingBooking = await Booking.findOne({ reservationDate, reservationTime });
@@ -270,8 +270,19 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
+    let bookerName = '불명';
+
+    if (req.user?.userId) {
+      const userDoc = await User.findOne({ userId: req.user.userId }).select('name');
+      if (userDoc) {
+        bookerName = userDoc.name;
+      }
+    }
+
     const newBooking = new Booking({
-      user:  (req as any).user?.userId ?? null,
+      user: req.user?.userId ?? null,
+      name: bookerName, 
+      isGuest: req.user?.isGuest ?? false,
       subtype: subtypeId,
       serviceType: serviceTypeId,
       tier,
@@ -300,7 +311,7 @@ export const getMyBookings = async (req: Request, res: Response) => {
   if (from && to) criteria.reservationDate = { $gte: from, $lte: to };
 
   const docs = await Booking.find(criteria)
-               .populate('serviceType', 'label')   // returns label only
+               .populate('serviceType', 'label')
                .lean();
   res.json(docs);
 };
