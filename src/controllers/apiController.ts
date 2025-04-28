@@ -319,6 +319,7 @@ export const getMyBookings = async (req: Request, res: Response) => {
 export const getUserBookingHistory = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user?.userId ? Number(req.user.userId) : null;
+    console.log('UserID from token:', req.user?.userId);
     const bookings = await Booking.find({user: userId}).select('serviceType reservationDate reservationTime name');
     res.json(bookings);
   } catch (err) {
