@@ -5,6 +5,7 @@ declare global {
   namespace Express {
     interface Request {
       user?: {
+        _id: string;
         userId: string;
         isAdmin: boolean;
         isGuest: boolean;
@@ -17,7 +18,7 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction): vo
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) {
     res.status(401).json({ message: 'No token provided' });
-    return;
+    return; 
   }
 
   try {
@@ -31,8 +32,8 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction): vo
 
     next();
   } catch (err) {
-    console.error('Invalid token:', err);
     res.status(403).json({ message: 'Invalid token' });
+    return;
   }
 };
 
