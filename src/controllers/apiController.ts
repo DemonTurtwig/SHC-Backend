@@ -238,7 +238,7 @@ export const getCurrentUser = async (
       return;
     }
 
-    const user = await User.findById(req.user?._id).select('-password');
+    const user = await User.findById(req.user?.userId).select('-password');
 
     if (!user) {
       res.status(404).json({ message: '유저를 찾지 못하였습니다.' });
