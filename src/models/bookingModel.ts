@@ -8,6 +8,7 @@ interface IBookingOption {
 
 interface IBooking {
   user: number | null;
+  name: string | null;
   isGuest: boolean;
   subtype: Types.ObjectId;
   serviceType: Types.ObjectId;
@@ -26,6 +27,7 @@ const BookingOptionSchema = new Schema<IBookingOption>({
 
 const BookingSchema = new Schema<IBooking>({
   user: { type: Number, ref: 'User', default: null },
+  name: { type: String, default: null },
   isGuest: { type: Boolean, default: false },
   subtype: { type: Schema.Types.ObjectId, ref: 'SubType', required: true },
   serviceType: { type: Schema.Types.ObjectId, ref: 'ServiceType', required: true },
