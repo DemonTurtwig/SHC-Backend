@@ -38,3 +38,10 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction): vo
   }
 };
 
+export const requireAdmin = (req: Request, res: Response, next: NextFunction): void => {
+  if (!req.user?.isAdmin) {
+    res.status(403).json({ message: '관리자 권한이 필요합니다.' });
+    return; 
+  }
+  next();
+};
