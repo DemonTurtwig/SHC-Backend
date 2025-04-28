@@ -320,7 +320,8 @@ export const getUserBookingHistory = async (req: Request, res: Response): Promis
 
     if (!req.user?.userId) {
       console.error('No userId found in req.user.');
-      return res.status(400).json({ message: 'Invalid user information.' });
+      res.status(400).json({ message: 'Invalid user information.' });
+    return 
     }
 
     const userId = Number(req.user.userId);
