@@ -248,10 +248,11 @@ export const getCurrentUser = async (
   }
 };
 
-export const deleteUser = async (req: Request, res: Response) => {
+export const deleteUser = async (req: Request, res: Response) : Promise<void> => {
   try {
     if (!req.user?._id) {
-      return res.status(400).json({ message: '잘못된 사용자 정보' });
+      res.status(400).json({ message: '잘못된 사용자 정보' });
+      return
     }
 
     await User.findByIdAndDelete(req.user._id);   // <-- use _id
