@@ -262,6 +262,11 @@ export const deleteUser = async (req: Request, res: Response) => {
   }
 };
 
+export const getAllServiceTypes = async (req: Request, res: Response) => {
+  const serviceTypes = await ServiceType.find();
+  res.json(serviceTypes);
+};
+
 export const createBooking = async (req: Request, res: Response): Promise<void> => {
   const { subtypeId, serviceTypeId, tier, options, reservationDate, reservationTime, totalPrice } = req.body;
 
