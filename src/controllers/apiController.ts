@@ -250,17 +250,16 @@ export const getCurrentUser = async (
 
 export const deleteUser = async (req: Request, res: Response) => {
   try {
-    await User.findByIdAndDelete(req.user?.userId);
-    res.status(200).json({ message: '유저 삭제 성공!' });
-  } catch (err) {
-    res.status(500).json({ message: '계정 삭제 실패' });
-  }
-};
+    if (!req.user?._id) {
+      return res.status(400).json({ message: '잘못된 사용자 정보' });
+    }
 
-export const getAllServiceTypes = async (req: Request, res: Response) => {
-  const serviceTypes = await ServiceType.find();
-  res.json(serviceTypes);
-};
+    await User.findByIdAndDelete(req.user._id);   // <-- use _id
+    res.status(200).json({ message: '계정이 삭제되었습니다!' });
+  } catch (err) {
+    console.error('deleteUser error:', err);
+    res.status(500).json({ message: '계정 삭제에 실패했습니다.' });
+  }
 
 export const createBooking = async (req: Request, res: Response): Promise<void> => {
   const { subtypeId, serviceTypeId, tier, options, reservationDate, reservationTime, totalPrice } = req.body;
