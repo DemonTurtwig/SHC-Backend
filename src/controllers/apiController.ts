@@ -115,6 +115,28 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+export const updateUser = async (req: Request, res: Response) : Promise<void> => {
+  const { name, phone } = req.body;
+  if (!name && !phone)
+    {
+      res.status(400).json({ message: '업데이트할 필드가 없습니다.' });
+  return
+  }
+
+  try {
+    const updated = await User.findByIdAndUpdate(
+      req.user!._id,
+      { ...(name && { name }), ...(phone && { phone }) },
+      { new: true, runValidators: true }
+    ).select('-password');
+
+    res.json(updated);
+  } catch (err) {
+    console.error('updateUser error:', err);
+    res.status(500).json({ message: '사용자 정보 수정 실패' });
+  }
+};
+
 // Get all time slots
 export const getAllTimeSlots = async (req: Request, res: Response) : Promise<void> => {
   try {
@@ -251,8 +273,8 @@ export const getCurrentUser = async (
 export const deleteUser = async (req: Request, res: Response) : Promise<void> => {
   try {
     if (!req.user?._id) {
-      res.status(400).json({ message: '잘못된 사용자 정보' });
-      return
+     res.status(400).json({ message: '잘못된 사용자 정보' });
+     return
     }
 
     await User.findByIdAndDelete(req.user._id);   // <-- use _id
