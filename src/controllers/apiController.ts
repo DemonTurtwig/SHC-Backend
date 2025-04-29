@@ -260,6 +260,7 @@ export const deleteUser = async (req: Request, res: Response) => {
     console.error('deleteUser error:', err);
     res.status(500).json({ message: '계정 삭제에 실패했습니다.' });
   }
+};
 
 export const createBooking = async (req: Request, res: Response): Promise<void> => {
   const { subtypeId, serviceTypeId, tier, options, reservationDate, reservationTime, totalPrice } = req.body;
