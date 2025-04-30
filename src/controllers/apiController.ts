@@ -348,7 +348,6 @@ export const getMyBookings = async (req: Request, res: Response) => {
 
 export const getUserBookingHistory = async (req: Request, res: Response): Promise<void> => {
   try {
-    // ✅ Log the incoming user information
     console.log('Received user info from token:', req.user);
 
     if (!req.user?.userId) {
@@ -357,7 +356,7 @@ export const getUserBookingHistory = async (req: Request, res: Response): Promis
      return
     }
 
-    const userId = Number(req.user.userId);  // 🔥 Force number cast to match Mongo
+    const userId = Number(req.user.userId); 
 
     console.log('Searching for bookings with userId:', userId);
 
