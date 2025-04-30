@@ -1,9 +1,8 @@
 import express from 'express';
 import { searchKakaoAddress } from '../controllers/kakaoController';
-import { requireAuth } from '../middleware/authMiddleware';
 
 const router = express.Router();
 
-router.get('/address', requireAuth, searchKakaoAddress);
+router.get('/address', searchKakaoAddress);
 
 export default router;
