@@ -20,7 +20,7 @@ router.get('/users/me', requireAuth, getCurrentUser);
 router.get('/booking/initialize', getBookingInitializeData);
 router.delete('/users/me', requireAuth, deleteUser);
 router.get('/servicetypes', getAllServiceTypes);
-router.get('/history', getUserBookingHistory);
+router.get('/history', requireAuth, getUserBookingHistory);
 router.patch('/users/me', requireAuth, updateUser);
 export default router;
 
