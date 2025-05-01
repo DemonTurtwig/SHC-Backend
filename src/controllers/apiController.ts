@@ -1,5 +1,5 @@
 // src/controllers/apiController.ts
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction, RequestHandler } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User';
@@ -102,7 +102,12 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
     }
     
     const token = jwt.sign(
-      { _id: user._id, userId: user.userId }, 
+      {
+        _id: user._id,
+        userId: user.userId,
+        isAdmin: user.isAdmin,
+        isGuest: user.isGuest
+      },
       process.env.JWT_SECRET!,
       { expiresIn: '7d' }
     );
@@ -346,16 +351,10 @@ export const getMyBookings = async (req: Request, res: Response) => {
   res.json(docs);
 };
 
-export const getUserBookingHistory = async (
-  req: Request & { user?: { userId?: number } },  
-  res: Response                                   
-): Promise<void> => {
+export const getUserBookingHistory: RequestHandler = async (req, res) => {
   try {
-    const userId = req.user?.userId;
-    if (!userId) {
-      res.status(401).json({ message: 'Unauthorized' });
-      return;
-    }
+    const userId = Number((req as any).user?.userId);
+    if (!userId) { res.status(401).json({ message: 'Unauthorized' }); return; }
 
     const filter: Record<string, any> = { user: userId };
 
