@@ -1,27 +1,88 @@
 // src/controllers/kakaoController.ts
-import { Request, Response } from 'express';
 import axios from 'axios';
+import jwt from 'jsonwebtoken';
+import { Request, Response } from 'express';
+import User from '../models/User';
+import { generateUserId } from '../utils/generateUserId';
 
-const KAKAO_REST_API_KEY = process.env.KAKAO_REST_API_KEY!;
+export const kakaoLogin = async (req: Request, res: Response): Promise<void> => {
+  const { accessToken } = req.body;
+
+  if (!accessToken) {
+     res.status(400).json({ message: 'Access token is required.' });
+    return
+  }
+
+  try {
+    const kakaoRes = await axios.get('https://kapi.kakao.com/v2/user/me', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
+      },
+    });
+
+    const kakaoUser = kakaoRes.data;
+    const kakaoId = kakaoUser.id;
+    const kakaoEmail = kakaoUser.kakao_account?.email || `kakao_${kakaoId}@noemail.com`;
+    const kakaoNickname = kakaoUser.properties?.nickname || '카카오 유저';
+
+    let user = await User.findOne({ email: kakaoEmail });
+    if (!user) {
+      const newUserId = await generateUserId();
+      user = await User.create({
+        email: kakaoEmail,
+        name: kakaoNickname,
+        provider: 'kakao',
+        userId: newUserId,
+        isGuest: false,
+        isAdmin: false,
+        emailVerified: true,
+      });
+    }
+
+    const token = jwt.sign(
+      {
+        _id: user._id,
+        userId: user.userId,
+        isAdmin: user.isAdmin,
+        isGuest: user.isGuest,
+      },
+      process.env.JWT_SECRET!,
+      { expiresIn: '7d' }
+    );
+
+    res.json({ token });
+  } catch (err: any) {
+    console.error('Kakao login error:', err?.response?.data || err.message);
+    res.status(401).json({ message: '카카오 인증에 실패했습니다.' });
+  }
+};
 
 export const searchKakaoAddress = async (req: Request, res: Response): Promise<void> => {
   const query = req.query.query as string;
+
   if (!query) {
     res.status(400).json({ message: '주소 쿼리가 필요합니다.' });
     return;
   }
- 
+
   try {
+    if (!process.env.KAKAO_REST_API_KEY) {
+      console.warn('❗ Kakao REST API Key is missing');
+    }
+
     const response = await axios.get('https://dapi.kakao.com/v2/local/search/address.json', {
       headers: {
-        Authorization: `KakaoAK ${KAKAO_REST_API_KEY}`,
+        Authorization: `KakaoAK ${process.env.KAKAO_REST_API_KEY}`,
       },
       params: { query },
     });
 
     res.status(200).json(response.data);
   } catch (error: any) {
-    console.error('Kakao API 오류:', error.message);
+    console.error('Kakao API 오류:', error?.response?.data || error.message);
     res.status(500).json({ message: '카카오 주소 검색 실패' });
   }
 };
+
+
