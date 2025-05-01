@@ -119,18 +119,27 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-export const updateUser = async (req: Request, res: Response) : Promise<void> => {
-  const { name, phone } = req.body;
-  if (!name && !phone)
-    {
-      res.status(400).json({ message: '업데이트할 필드가 없습니다.' });
-  return
+export const updateUser = async (req: Request, res: Response): Promise<void> => {
+  const { name, phone, password } = req.body;
+
+  if (!name && !phone && !password) {
+    res.status(400).json({ message: '업데이트할 필드가 없습니다.' });
+    return;
   }
 
   try {
+    const updates: Record<string, any> = {};
+    if (name) updates.name = name;
+    if (phone) updates.phone = phone;
+
+    if (password) {
+      const hashed = await bcrypt.hash(password, 10);
+      updates.password = hashed;
+    }
+
     const updated = await User.findByIdAndUpdate(
       req.user!._id,
-      { ...(name && { name }), ...(phone && { phone }) },
+      updates,
       { new: true, runValidators: true }
     ).select('-password');
 
