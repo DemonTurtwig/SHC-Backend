@@ -35,9 +35,9 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction): vo
 
     next();
   } catch (err) {
-    console.log('  ✖ token invalid:', err.message);
     console.error('Invalid token:', err);
     res.status(403).json({ message: 'Invalid token' });
+    console.log('  ✖ token invalid:', err.message);
   }
 };
 
