@@ -17,7 +17,6 @@ declare global {
 export const requireAuth = (req: Request, res: Response, next: NextFunction): void => {
   const token = req.headers.authorization?.split(' ')[1];
   console.log('→ requireAuth for', req.path);
-  console.log('  Authorization header =', req.headers.authorization);
   if (!token) {
     res.status(401).json({ message: 'No token provided' });
     return;
@@ -25,7 +24,6 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction): vo
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
-    console.log('  ✔ decoded token =', decoded);
     req.user = {
       _id: decoded._id,
       userId: decoded.userId,
@@ -37,7 +35,6 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction): vo
   } catch (err) {
     console.error('Invalid token:', err);
     res.status(403).json({ message: 'Invalid token' });
-    console.log('  ✖ token invalid:', err.message);
   }
 };
 
