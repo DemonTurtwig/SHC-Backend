@@ -335,20 +335,6 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
   }
 };
 
-export const getMyBookings = async (req: Request, res: Response) => {
-  const { from, to } = req.query;
-  const userId = (req as any).user?.userId;
-
-  if (!userId) return res.status(401).json({ message: 'Unauthorized' });
-
-  const criteria: any = { user: userId };
-  if (from && to) criteria.reservationDate = { $gte: from, $lte: to };
-
-  const docs = await Booking.find(criteria)
-               .populate('serviceType', 'label')
-               .lean();
-  res.json(docs);
-};
 
 export const getUserBookingHistory = async (req: Request, res: Response): Promise<void> => {
   try {
