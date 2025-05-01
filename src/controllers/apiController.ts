@@ -346,29 +346,40 @@ export const getMyBookings = async (req: Request, res: Response) => {
   res.json(docs);
 };
 
-export const getUserBookingHistory = async (req: Request, res: Response) => {
+export const getUserBookingHistory = async (
+  req: Request & { user?: { userId?: number } },  
+  res: Response                                   
+): Promise<void> => {
   try {
     const userId = req.user?.userId;
-    if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+    if (!userId) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
 
-    const filter: any = { user: userId };
+    const filter: Record<string, any> = { user: userId };
 
-    const { startDate, endDate } = req.query;
+    const { startDate, endDate } = req.query as {
+      startDate?: string;
+      endDate?: string;
+    };
     if (startDate && endDate) {
       filter.reservationDate = {
-        $gte: new Date(startDate as string),
-        $lte: new Date(endDate as string),
+        $gte: new Date(startDate),
+        $lte: new Date(endDate),
       };
     }
-    
+
     const bookings = await Booking.find(filter)
       .populate('serviceType', 'label')
-      .select('serviceType reservationDate reservationTime totalPrice status')
+      .select(
+        'serviceType reservationDate reservationTime totalPrice status'
+      )
       .sort({ reservationDate: -1, reservationTime: -1 })
       .lean();
 
     res.json(
-      bookings.map(b => ({
+      bookings.map((b) => ({
         ...b,
         serviceLabel: (b.serviceType as any).label,
       }))
