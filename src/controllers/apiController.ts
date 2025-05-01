@@ -3,7 +3,6 @@ import { Request, Response, NextFunction, RequestHandler } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User';
-import { getKakaoUserInfo } from '../services/kakaoService';
 import { generateUserId } from '../utils/generateUserId'; 
 import { ServiceType } from '../models/applianceModel';
 import Booking from '../models/bookingModel';
@@ -167,47 +166,6 @@ export const getAllTimeSlots = async (req: Request, res: Response) : Promise<voi
     console.error('❌ Failed to fetch timeslots:', err);
     res.status(500).json({ message: 'Failed to fetch timeslots' });
   }
-};
-
-
-// POST /api/auth/kakao/login
-export const kakaoLogin = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { accessToken } = req.body;
-    if (!accessToken) {
-      res.status(400).json({ message: '엑세스 토큰이 필요합니다.' });
-      return;
-    }
-
-    const kakaoData = await getKakaoUserInfo(accessToken);
-    const kakaoId = kakaoData.id.toString();
-    const name    = kakaoData.kakao_account.profile.nickname;
-    const phone   = kakaoData.kakao_account.phone_number || '';
-
-    // find or create
-    let user = await User.findOne({ kakaoId });
-    if (!user) {
-      user = new User({ name, phone, kakaoId, isGuest: false });
-      await user.save();
-    }
-
-    // issue JWT
-    const token = jwt.sign(
-      {
-        _id: user._id,
-        userId: user.userId,
-        isAdmin: user.isAdmin,
-        isGuest: user.isGuest ?? false,
-      },
-      JWT_SECRET,
-      { expiresIn: '7d' }
-    );
-    res.json({ token });
-  } catch (err) {
-    console.error('Kakao login error:', err);
-    res.status(401).json({ message: '카카오 로그인에 실패했습니다.' });
-  }
-  
 };
 
 // --- GET /api/options?subtype=... or ?serviceType=...
