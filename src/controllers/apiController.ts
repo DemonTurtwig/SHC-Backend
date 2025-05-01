@@ -351,17 +351,18 @@ export const getMyBookings = async (req: Request, res: Response) => {
   res.json(docs);
 };
 
-export const getUserBookingHistory: RequestHandler = async (req, res) => {
+export const getUserBookingHistory = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = Number((req as any).user?.userId);
-    if (!userId) { res.status(401).json({ message: 'Unauthorized' }); return; }
+    if (!req.user?.userId) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
 
-    const filter: Record<string, any> = { user: userId };
+    const userId = Number(req.user.userId);
 
-    const { startDate, endDate } = req.query as {
-      startDate?: string;
-      endDate?: string;
-    };
+    const filter: any = { user: userId };
+
+    const { startDate, endDate } = req.query as { startDate?: string; endDate?: string };
     if (startDate && endDate) {
       filter.reservationDate = {
         $gte: new Date(startDate),
@@ -369,22 +370,20 @@ export const getUserBookingHistory: RequestHandler = async (req, res) => {
       };
     }
 
-    const bookings = await Booking.find(filter)
+    const docs = await Booking.find(filter)
       .populate('serviceType', 'label')
-      .select(
-        'serviceType reservationDate reservationTime totalPrice status'
-      )
+      .select('serviceType reservationDate reservationTime totalPrice status')
       .sort({ reservationDate: -1, reservationTime: -1 })
       .lean();
 
     res.json(
-      bookings.map((b) => ({
+      docs.map((b) => ({
         ...b,
         serviceLabel: (b.serviceType as any).label,
       }))
     );
   } catch (err) {
-    console.error(err);
+    console.error('Booking history error:', err);
     res.status(500).json({ message: '예약 내역을 불러오지 못했습니다.' });
   }
 };
