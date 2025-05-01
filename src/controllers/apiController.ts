@@ -106,12 +106,11 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
         _id: user._id,
         userId: user.userId,
         isAdmin: user.isAdmin,
-        isGuest: user.isGuest
+        isGuest: user.isGuest ?? false
       },
-      process.env.JWT_SECRET!,
+      JWT_SECRET,
       { expiresIn: '7d' }
     );
-    
     
     res.json({ token });
   } catch (err) {
@@ -359,23 +358,19 @@ export const getUserBookingHistory = async (req: Request, res: Response): Promis
     }
 
     const userId = Number(req.user.userId);
-
     const filter: any = { user: userId };
 
     const { startDate, endDate } = req.query as { startDate?: string; endDate?: string };
     if (startDate && endDate) {
-      filter.reservationDate = {
-        $gte: new Date(startDate),
-        $lte: new Date(endDate),
-      };
+      filter.reservationDate = { $gte: new Date(startDate), $lte: new Date(endDate) };
     }
 
     const docs = await Booking.find(filter)
-      .populate('serviceType', 'label')
-      .select('serviceType reservationDate reservationTime totalPrice status')
-      .sort({ reservationDate: -1, reservationTime: -1 })
-      .lean();
-
+    .populate('serviceType', 'label')
+    .select('serviceType reservationDate reservationTime totalPrice status')
+    .sort({ reservationDate: -1, reservationTime: -1 })
+    .lean();
+    
     res.json(
       docs.map((b) => ({
         ...b,
