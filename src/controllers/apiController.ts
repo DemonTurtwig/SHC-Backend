@@ -314,7 +314,7 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
     }
 
     const newBooking = new Booking({
-      user: req.user?.userId ?? null,
+      user: req.user ? Number(req.user.userId) : null,
       name: bookerName, 
       isGuest: req.user?.isGuest ?? false,
       subtype: subtypeId,
