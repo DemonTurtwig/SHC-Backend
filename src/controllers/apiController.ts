@@ -346,27 +346,27 @@ export const getMyBookings = async (req: Request, res: Response) => {
   res.json(docs);
 };
 
-export const getUserBookingHistory = async (req: Request, res: Response): Promise<void> => {
+export const getUserBookingHistory = async (req: Request, res: Response) => {
   try {
-    console.log('Received user info from token:', req.user);
+    const userId = req.user?.userId;
+    if (!userId) return res.status(401).json({ message: 'Unauthorized' });
 
-    if (!req.user?.userId) {
-      console.error('No userId found in req.user.');
-     res.status(400).json({ message: 'Invalid user information.' });
-     return
+    const filter: any = { user: userId };
+
+    const { startDate, endDate } = req.query;
+    if (startDate && endDate) {
+      filter.reservationDate = {
+        $gte: new Date(startDate as string),
+        $lte: new Date(endDate as string),
+      };
     }
-
-    const userId = Number(req.user.userId); 
-
-    console.log('Searching for bookings with userId:', userId);
-
-    const bookings = await Booking.find({ user: userId })
+    
+    const bookings = await Booking.find(filter)
       .populate('serviceType', 'label')
       .select('serviceType reservationDate reservationTime totalPrice status')
       .sort({ reservationDate: -1, reservationTime: -1 })
       .lean();
 
-    // flatten serviceType so the app doesn’t need to drill into it
     res.json(
       bookings.map(b => ({
         ...b,
