@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import Booking from '../models/bookingModel';
+import User from '../models/User';
 
 // GET /api/admin/bookings
 export const getAllBookings = async (req: Request, res: Response) => {
@@ -62,5 +63,27 @@ export const deleteBookingById = async (req: Request, res: Response): Promise<vo
     } catch (err) {
       res.status(500).json({ message: '예약 삭제 실패' });
       return;
+    }
+  };
+  export const updateIsAdmin = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const user = await User.findById(req.params.id);
+      if (!user) {
+        res.status(404).json({ message: 'User not found' });
+        return;
+      }
+  
+      if (typeof req.body.isAdmin !== 'boolean') {
+        res.status(400).json({ message: 'isAdmin must be boolean' });
+        return;
+      }
+  
+      user.isAdmin = req.body.isAdmin;
+      await user.save();
+  
+      res.json({ message: 'updated', isAdmin: user.isAdmin });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Server error' });
     }
   };
