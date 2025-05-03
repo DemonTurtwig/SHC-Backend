@@ -1,6 +1,6 @@
 import express from 'express';
 import { requireAuth, requireAdmin } from '../middleware/authMiddleware';
-import {getAllBookings, filterAdminBookings, deleteBookingById, updateBookingStatus} from '../controllers/adminController';
+import {getAllBookings, filterAdminBookings, deleteBookingById, updateBookingStatus, updateIsAdmin} from '../controllers/adminController';
 
 
 const router = express.Router();
@@ -15,5 +15,5 @@ router.get('/bookings', getAllBookings);
 router.post('/bookings/filter', filterAdminBookings);
 router.patch('/bookings/:id/status', updateBookingStatus);
 router.delete('/bookings/:id', deleteBookingById);
-
+router.patch('/users/:id/role', requireAuth, requireAdmin, updateIsAdmin);
 export default router;
