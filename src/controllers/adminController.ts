@@ -20,7 +20,8 @@ export const filterAdminBookings = async (req: Request, res: Response) => {
     const end   = req.body.end       ?? req.body.endDate;
 
     if (!start || !end) {
-      return res.status(400).json({ message: 'start / end date required' });
+     res.status(400).json({ message: 'start / end date required' });
+     return
     }
 
     const bookings = await Booking.find({
