@@ -15,17 +15,22 @@ export const getAllBookings = async (req: Request, res: Response) => {
 // POST /api/admin/bookings/filter
 export const filterAdminBookings = async (req: Request, res: Response) => {
   try {
-    const { startDate, endDate } = req.body;
+    /* accept either key set */
+    const start = req.body.start     ?? req.body.startDate;
+    const end   = req.body.end       ?? req.body.endDate;
+
+    if (!start || !end) {
+      return res.status(400).json({ message: 'start / end date required' });
+    }
+
     const bookings = await Booking.find({
-      reservationDate: {
-        $gte: new Date(startDate),
-        $lte: new Date(endDate),
-      },
+      reservationDate: { $gte: start, $lte: end },
     }).sort({ reservationDate: -1 });
 
     res.json(bookings);
   } catch (err) {
-    res.status(500).json({ message: '예약 필터링 실패' });
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
