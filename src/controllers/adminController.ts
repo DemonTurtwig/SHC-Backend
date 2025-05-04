@@ -75,12 +75,12 @@ export const deleteBookingById = async (req: Request, res: Response): Promise<vo
     try {
       const user = await User.findById(req.params.id);
       if (!user) {
-        res.status(404).json({ message: 'User not found' });
+        res.status(404).json({ message: '유저를 찾을수 없습니다.' });
         return;
       }
   
       if (typeof req.body.isAdmin !== 'boolean') {
-        res.status(400).json({ message: 'isAdmin must be boolean' });
+        res.status(400).json({ message: 'isAdmin는 boolean이여야 합니다.' });
         return;
       }
   
@@ -90,7 +90,7 @@ export const deleteBookingById = async (req: Request, res: Response): Promise<vo
       res.json({ message: 'updated', isAdmin: user.isAdmin });
     } catch (err) {
       console.error(err);
-      res.status(500).json({ message: 'Server error' });
+      res.status(500).json({ message: '서버 오류' });
     }
   };
 
