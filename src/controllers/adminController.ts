@@ -87,3 +87,8 @@ export const deleteBookingById = async (req: Request, res: Response): Promise<vo
       res.status(500).json({ message: 'Server error' });
     }
   };
+
+  export const getAllAdminUsers = async (_req: Request, res: Response) => {
+    const users = await User.find().sort({ createdAt: -1 });
+    res.json(users);
+  };
