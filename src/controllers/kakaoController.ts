@@ -72,20 +72,16 @@ export const searchKakaoAddress = async (req: Request, res: Response): Promise<v
   }
 
   try {
-    const response = await axios.get(
-      'https://dapi.kakao.com/v2/local/search/address.json',
-      {
-        headers: {
-          Authorization: `KakaoAK ${process.env.KAKAO_REST_API_KEY}`,
-        },
-        params: {
-          query,
-          analyze_type: 'exact',
-          page: 1,
-          size: 15,
-        },
+    const response = await axios.get('https://dapi.kakao.com/v2/local/search/keyword.json', {
+      headers: {
+        Authorization: `KakaoAK ${process.env.KAKAO_REST_API_KEY}`,
       },
-    );
+      params: {
+        query,
+        category_group_code: 'AD5',
+        size: 30,
+      },
+    });
 
     res.status(200).json(response.data);
   } catch (err: any) {
