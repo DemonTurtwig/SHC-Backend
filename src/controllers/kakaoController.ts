@@ -59,30 +59,37 @@ export const kakaoLogin = async (req: Request, res: Response): Promise<void> => 
 };
 
 export const searchKakaoAddress = async (req: Request, res: Response): Promise<void> => {
-  const query = req.query.query as string;
+  const query = String(req.query.query ?? '').trim();
 
   if (!query) {
     res.status(400).json({ message: '주소 쿼리가 필요합니다.' });
     return;
   }
+  if (!process.env.KAKAO_REST_API_KEY) {
+    console.error('❗ Kakao REST API Key is missing');
+    res.status(500).json({ message: '서버 환경변수 오류' });
+    return;
+  }
 
   try {
-    if (!process.env.KAKAO_REST_API_KEY) {
-      console.warn('❗ Kakao REST API Key is missing');
-    }
-
-    const response = await axios.get('https://dapi.kakao.com/v2/local/search/address.json', {
-      headers: {
-        Authorization: `KakaoAK ${process.env.KAKAO_REST_API_KEY}`,
+    const response = await axios.get(
+      'https://dapi.kakao.com/v2/local/search/address.json',
+      {
+        headers: {
+          Authorization: `KakaoAK ${process.env.KAKAO_REST_API_KEY}`,
+        },
+        params: {
+          query,
+          analyze_type: 'exact',
+          page: 1,
+          size: 15,
+        },
       },
-      params: { query },
-    });
+    );
 
     res.status(200).json(response.data);
-  } catch (error: any) {
-    console.error('Kakao API 오류:', error?.response?.data || error.message);
+  } catch (err: any) {
+    console.error('Kakao API 오류:', err?.response?.data || err.message);
     res.status(500).json({ message: '카카오 주소 검색 실패' });
   }
 };
-
-
