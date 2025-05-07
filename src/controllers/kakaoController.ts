@@ -72,7 +72,7 @@ export const searchKakaoAddress = async (req: Request, res: Response): Promise<v
   }
 
   try {
-    const response = await axios.get('https://dapi.kakao.com/v2/local/search/keyword.json', {
+    const response = await axios.get('https://dapi.kakao.com/v2/local/search/address.json', {
       headers: {
         Authorization: `KakaoAK ${process.env.KAKAO_REST_API_KEY}`,
       },
