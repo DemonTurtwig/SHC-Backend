@@ -98,3 +98,9 @@ export const deleteBookingById = async (req: Request, res: Response): Promise<vo
     const users = await User.find().sort({ createdAt: -1 });
     res.json(users);
   };
+
+  export const deleteUserById = async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+    await User.findByIdAndDelete(id);
+    res.json({ ok: true });
+  };
