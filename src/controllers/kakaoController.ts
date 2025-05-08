@@ -89,3 +89,33 @@ export const searchKakaoAddress = async (req: Request, res: Response): Promise<v
     res.status(500).json({ message: '카카오 주소 검색 실패' });
   }
 };
+
+export const searchExpandedRoad = async (req: Request, res: Response): Promise<void> => {
+  const base = req.query.query?.toString();
+  if (!base) {
+    res.status(400).json({ message: 'query required' });
+    return;
+  }
+
+  try {
+    const addresses = [];
+    for (let i = 1; i <= 30; i++) {
+      const query = `${base} ${i}`;
+      const response = await axios.get('https://dapi.kakao.com/v2/local/search/address.json', {
+        headers: {
+          Authorization: `KakaoAK ${process.env.KAKAO_REST_API_KEY}`,
+        },
+        params: { query },
+      });
+      if (response.data.documents.length) {
+        addresses.push(...response.data.documents);
+        if (addresses.length >= 5) break;
+      }
+    }
+
+    res.status(200).json(addresses);
+  } catch (err: any) {
+    console.error('searchExpandedRoad error:', err.response?.data || err.message);
+    res.status(500).json({ message: '주소 확장 검색 실패' });
+  }
+};
