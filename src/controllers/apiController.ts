@@ -43,6 +43,24 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
       });
 
       await guest.save();
+
+    const token = jwt.sign(
+    {
+      _id: guest._id,
+      userId: guest.userId,
+      isAdmin: false,
+      isGuest: true,
+    },
+    process.env.JWT_SECRET!,
+    { expiresIn: '90d' }
+    );
+
+res.status(201).json({
+  message: '비회원 정보가 저장되었습니다.',
+  userId: guest.userId,
+  token,
+});
+
       res.status(201).json({ message: '비회원 정보가 저장되었습니다.', userId: guest.userId });
       return;
     }
@@ -333,68 +351,5 @@ export const getUserBookingHistory = async (req: Request, res: Response): Promis
   } catch (err) {
     console.error('Booking history error:', err);
     res.status(500).json({ message: '예약 내역을 불러오지 못했습니다.' });
-  }
-};
-
-export const getGuestInfo = async (req: Request, res: Response): Promise<void> => {
-  const { guestId } = req.params;
-
-  if (!guestId) {
-    res.status(400).json({ message: '게스트 ID가 없습니다.' });
-    return;
-  }
-
-  try {
-    const guest = await User.findOne({ userId: guestId, isGuest: true });
-    if (!guest) {
-      res.status(404).json({ message: '게스트를 찾을 수 없습니다.' });
-      return;
-    }
-
-    res.status(200).json({
-      name: guest.name,
-      phone: guest.phone,
-      address: guest.address,
-      isGuest: true,
-    });
-  } catch (err) {
-    console.error('getGuestInfo error:', err);
-    res.status(500).json({ message: '게스트 정보를 불러오는 중 서버 오류로 불러오는데 실패했습니다.' });
-  }
-};
-
-export const createGuestBooking = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const {
-      name,
-      phone,
-      address,
-      serviceTypeId,
-      subtypeId,
-      tier,
-      reservationDate,
-      reservationTime,
-      options,
-      totalPrice,
-    } = req.body;
-
-    const booking = await Booking.create({
-      name,
-      phone,
-      address,
-      serviceType: serviceTypeId,
-      subtype: subtypeId,
-      tier,
-      reservationDate,
-      reservationTime,
-      options,
-      totalPrice,
-      isGuest: true,
-    });
-
-    res.status(201).json({ message: 'Guest booking created', booking });
-  } catch (err) {
-    console.error('Guest booking failed:', err);
-    res.status(500).json({ message: 'Guest booking error' });
   }
 };
