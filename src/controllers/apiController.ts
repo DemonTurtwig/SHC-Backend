@@ -340,14 +340,14 @@ export const getGuestInfo = async (req: Request, res: Response): Promise<void> =
   const { guestId } = req.params;
 
   if (!guestId) {
-    res.status(400).json({ message: 'No guest ID' });
+    res.status(400).json({ message: '게스트 ID가 없습니다.' });
     return;
   }
 
   try {
     const guest = await User.findOne({ userId: guestId, isGuest: true });
     if (!guest) {
-      res.status(404).json({ message: 'Guest not found' });
+      res.status(404).json({ message: '게스트를 찾을 수 없습니다.' });
       return;
     }
 
@@ -359,7 +359,42 @@ export const getGuestInfo = async (req: Request, res: Response): Promise<void> =
     });
   } catch (err) {
     console.error('getGuestInfo error:', err);
-    res.status(500).json({ message: 'Server error while retrieving guest info' });
+    res.status(500).json({ message: '게스트 정보를 불러오는 중 서버 오류로 불러오는데 실패했습니다.' });
   }
 };
 
+export const createGuestBooking = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const {
+      name,
+      phone,
+      address,
+      serviceTypeId,
+      subtypeId,
+      tier,
+      reservationDate,
+      reservationTime,
+      options,
+      totalPrice,
+    } = req.body;
+
+    const booking = await Booking.create({
+      name,
+      phone,
+      address,
+      serviceType: serviceTypeId,
+      subtype: subtypeId,
+      tier,
+      reservationDate,
+      reservationTime,
+      options,
+      totalPrice,
+      isGuest: true,
+    });
+
+    res.status(201).json({ message: 'Guest booking created', booking });
+  } catch (err) {
+    console.error('Guest booking failed:', err);
+    res.status(500).json({ message: 'Guest booking error' });
+  }
+};
