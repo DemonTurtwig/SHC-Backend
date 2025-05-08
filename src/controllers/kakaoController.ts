@@ -100,17 +100,19 @@ export const searchExpandedRoad = async (req: Request, res: Response): Promise<v
   try {
     const addresses = [];
     for (let i = 1; i <= 30; i++) {
-      const query = `${base} ${i}`;
       const response = await axios.get('https://dapi.kakao.com/v2/local/search/address.json', {
         headers: {
           Authorization: `KakaoAK ${process.env.KAKAO_REST_API_KEY}`,
         },
-        params: { query },
+        params: { query: `${base} ${i}` },
       });
-      if (response.data.documents.length) {
-        addresses.push(...response.data.documents);
-        if (addresses.length >= 5) break;
+    
+      const valid = response.data.documents.filter((d: { road_address: any; }) => d.road_address);
+      if (valid.length > 0) {
+        addresses.push(...valid);
       }
+    
+      if (addresses.length >= 5) break;
     }
 
     res.status(200).json(addresses);
