@@ -21,6 +21,6 @@ router.delete('/users/me', requireAuth, deleteUser);
 router.get('/servicetypes', getAllServiceTypes);
 router.get('/history', requireAuth, getUserBookingHistory);
 router.patch('/users/me', requireAuth, updateUser);
-router.get('kakao/expand-address', searchExpandedRoad);
+router.get('/kakao/expand-address', searchExpandedRoad);
 
 export default router;
