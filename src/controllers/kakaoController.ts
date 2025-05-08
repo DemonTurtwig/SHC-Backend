@@ -99,6 +99,7 @@ export const searchExpandedRoad = async (req: Request, res: Response): Promise<v
 
   try {
     const addresses = [];
+
     for (let i = 1; i <= 30; i++) {
       const response = await axios.get('https://dapi.kakao.com/v2/local/search/address.json', {
         headers: {
@@ -106,12 +107,12 @@ export const searchExpandedRoad = async (req: Request, res: Response): Promise<v
         },
         params: { query: `${base} ${i}` },
       });
-    
-      const valid = response.data.documents.filter((d: { road_address: any; }) => d.road_address);
-      if (valid.length > 0) {
-        addresses.push(...valid);
+
+      const filtered = response.data.documents.filter((d: any) => d.road_address);
+      if (filtered.length) {
+        addresses.push(...filtered);
       }
-    
+
       if (addresses.length >= 5) break;
     }
 
