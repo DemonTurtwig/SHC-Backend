@@ -335,3 +335,31 @@ export const getUserBookingHistory = async (req: Request, res: Response): Promis
     res.status(500).json({ message: '예약 내역을 불러오지 못했습니다.' });
   }
 };
+
+export const getGuestInfo = async (req: Request, res: Response): Promise<void> => {
+  const { guestId } = req.params;
+
+  if (!guestId) {
+    res.status(400).json({ message: 'No guest ID' });
+    return;
+  }
+
+  try {
+    const guest = await User.findOne({ userId: guestId, isGuest: true });
+    if (!guest) {
+      res.status(404).json({ message: 'Guest not found' });
+      return;
+    }
+
+    res.status(200).json({
+      name: guest.name,
+      phone: guest.phone,
+      address: guest.address,
+      isGuest: true,
+    });
+  } catch (err) {
+    console.error('getGuestInfo error:', err);
+    res.status(500).json({ message: 'Server error while retrieving guest info' });
+  }
+};
+
