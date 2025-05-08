@@ -18,7 +18,7 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction): vo
   const token = req.headers.authorization?.split(' ')[1];
   console.log('→ requireAuth for', req.path);
   if (!token) {
-    res.status(401).json({ message: 'No token provided' });
+    res.status(401).json({ message: '토큰이 없습니다.' });
     return;
   }
 
@@ -34,7 +34,7 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction): vo
     next();
   } catch (err) {
     console.error('Invalid token:', err);
-    res.status(403).json({ message: 'Invalid token' });
+    res.status(403).json({ message: '토큰이 유효하지 않습니다.' });
   }
 };
 
