@@ -34,12 +34,17 @@ const UserSchema = new mongoose.Schema({
   },
   email: {
     type: String,
-    required: false,
+    required: function (this: any) {
+      return this.provider !== 'guest';
+    },
   },
   password: {
     type: String,
-    required: false, // for guests
+    required: function (this: any) {
+      return this.provider !== 'guest' && this.provider !== 'kakao';
+    },
   },
+  
   address: {
     type: String,
     required: false,
@@ -77,4 +82,3 @@ const UserSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', UserSchema);
 export default User;
-
