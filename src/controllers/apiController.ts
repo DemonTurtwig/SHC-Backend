@@ -84,7 +84,7 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
     }
 
     const hashed = await bcrypt.hash(password, 10);
-    const newUserId = await generateUserId(); // also assign to standard users
+    const newUserId = await generateUserId();
 
     const user = new User({
       userId: newUserId,
