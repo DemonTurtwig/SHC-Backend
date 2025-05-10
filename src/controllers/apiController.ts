@@ -28,10 +28,16 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
         res.status(400).json({ message: '비회원은 이름·휴대폰·주소가 필요합니다.' });
         return;
       }
-
-      // generate numeric userId
+    
+      // 🧠 Check if a guest already exists with the same phone
+      const existingGuest = await User.findOne({ phone, isGuest: true });
+      if (existingGuest) {
+        res.status(409).json({ message: '이미 등록된 비회원 전화번호입니다.' });
+        return;
+      }
+    
       const newUserId = await generateUserId();
-
+    
       const guest = new User({
         userId: newUserId,
         name,
@@ -41,29 +47,29 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
         isGuest: true,
         provider: 'guest',
       });
-
+    
       await guest.save();
-
-    const token = jwt.sign(
-    {
-      _id: guest._id,
-      userId: guest.userId,
-      isAdmin: false,
-      isGuest: true,
-    },
-    process.env.JWT_SECRET!,
-    { expiresIn: '90d' }
-    );
-
-res.status(201).json({
-  message: '비회원 정보가 저장되었습니다.',
-  userId: guest.userId,
-  token,
-});
-
-      res.status(201).json({ message: '비회원 정보가 저장되었습니다.', userId: guest.userId });
+    
+      const token = jwt.sign(
+        {
+          _id: guest._id,
+          userId: guest.userId,
+          isAdmin: false,
+          isGuest: true,
+        },
+        process.env.JWT_SECRET!,
+        { expiresIn: '90d' }
+      );
+    
+      res.status(201).json({
+        message: '비회원 정보가 저장되었습니다.',
+        userId: guest.userId,
+        token,
+      });
+    
       return;
     }
+    
 
     // —— Standard registration branch ——
     if (!name || !phone || !email || !password || !address) {
