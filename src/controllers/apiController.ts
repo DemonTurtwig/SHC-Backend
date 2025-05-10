@@ -267,17 +267,22 @@ export const getCurrentUser = async (
 
 export const deleteUser = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = req.user?._id;
-    if (!userId) {
+    const { _id, userId, isGuest } = req.user ?? {};
+
+    if (!_id) {
       res.status(400).json({ message: '잘못된 사용자 정보' });
       return;
     }
 
-    // 🗑️ 1. Delete all bookings tied to this user (guest or registered)
-    await Booking.deleteMany({ user: userId }); // assuming Booking.user = User._id
+    if (isGuest) {
+      // Guest: delete by numeric userId
+      await Booking.deleteMany({ userId });
+    } else {
+      // Regular user: delete by ObjectId reference
+      await Booking.deleteMany({ user: _id });
+    }
 
-    // 🗑️ 2. Delete the user account
-    await User.findByIdAndDelete(userId);
+    await User.findByIdAndDelete(_id);
 
     res.status(200).json({ message: '계정이 삭제되었습니다!' });
   } catch (err) {
@@ -285,6 +290,7 @@ export const deleteUser = async (req: Request, res: Response): Promise<void> => 
     res.status(500).json({ message: '계정 삭제에 실패했습니다.' });
   }
 };
+
 
 export const getAllServiceTypes = async (req: Request, res: Response) => {
   const serviceTypes = await ServiceType.find();
