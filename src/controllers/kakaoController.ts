@@ -1,60 +1,48 @@
-// src/controllers/kakaoController.ts
+import { Request, Response } from 'express';
 import axios from 'axios';
 import jwt from 'jsonwebtoken';
-import { Request, Response } from 'express';
-import User from '../models/User';
-import { generateUserId } from '../utils/generateUserId';
+import { findOrCreateKakaoUser } from '../services/kakaoService';
 
 export const kakaoLogin = async (req: Request, res: Response): Promise<void> => {
   const { accessToken } = req.body;
 
   if (!accessToken) {
-     res.status(400).json({ message: 'Access token is required.' });
-    return
+   res.status(400).json({ message: 'Access token is required.' });
+   return;
   }
 
   try {
-    const kakaoRes = await axios.get('https://kapi.kakao.com/v2/user/me', {
+    const kakaoUserRes = await axios.get('https://kapi.kakao.com/v2/user/me', {
       headers: {
         Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
       },
     });
 
-    const kakaoUser = kakaoRes.data;
-    const kakaoId = kakaoUser.id;
-    const kakaoEmail = kakaoUser.kakao_account?.email || `kakao_${kakaoId}@noemail.com`;
-    const kakaoNickname = kakaoUser.properties?.nickname || '카카오 유저';
+    const kakaoProfile = kakaoUserRes.data;
 
-    let user = await User.findOne({ email: kakaoEmail });
-    if (!user) {
-      const newUserId = await generateUserId();
-      user = await User.create({
-        email: kakaoEmail,
-        name: kakaoNickname,
-        provider: 'kakao',
-        userId: newUserId,
-        isGuest: false,
-        isAdmin: false,
-        emailVerified: true,
-      });
-    }
+    const user = await findOrCreateKakaoUser(kakaoProfile);
 
     const token = jwt.sign(
       {
         _id: user._id,
+        email: user.email,
         userId: user.userId,
-        isAdmin: user.isAdmin,
-        isGuest: user.isGuest,
+        isAdmin: user.isAdmin || false,
       },
-      process.env.JWT_SECRET!,
-      { expiresIn: '7d' }
-    );
+        process.env.JWT_SECRET!,
+        { expiresIn: '7d' }
+        );
 
-    res.json({ token });
-  } catch (err: any) {
-    console.error('Kakao login error:', err?.response?.data || err.message);
-    res.status(401).json({ message: '카카오 인증에 실패했습니다.' });
+        res.status(200).json({
+          message: '카카오 로그인에 성공했습니다.',
+          user,
+          token,
+        });
+
+  } catch (err) {
+    console.error('Kakao login error:', err);
+    res.status(500).json({ message: '카카오 로그인에 실패했습니다.' });
   }
 };
 
@@ -122,3 +110,4 @@ export const searchExpandedRoad = async (req: Request, res: Response): Promise<v
     res.status(500).json({ message: '주소 확장 검색 실패' });
   }
 };
+export { findOrCreateKakaoUser };
