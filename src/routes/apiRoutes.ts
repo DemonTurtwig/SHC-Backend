@@ -8,7 +8,7 @@ import { getBookingInitializeData } from '../controllers/bookingController';
 const router = express.Router();
 
 router.post('/register', registerUser);
-router.post('/kakao/login', kakaoLogin);
+router.get('/kakao/login', kakaoLogin);
 router.get('/kakao/address', searchKakaoAddress);
 router.post('/login', loginUser);
 router.get('/options', getOptions);       
