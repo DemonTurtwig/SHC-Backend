@@ -6,8 +6,21 @@ import User from '../models/User';
 export const getAllBookings = async (req: Request, res: Response) => {
   try {
     const bookings = await Booking.find().sort({ reservationDate: -1 });
-    res.json(bookings);
+
+    const users = await User.find({}, 'userId address phone'); // only pull fields we need
+
+    const enriched = bookings.map((booking) => {
+      const user = users.find((u) => u.userId === booking.user);
+      return {
+        ...booking.toObject(),
+        userAddress: user?.address || null,
+        userPhone: user?.phone || null,
+      };
+    });
+
+    res.json(enriched);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: '전체 예약 조회 실패' });
   }
 };
@@ -15,25 +28,36 @@ export const getAllBookings = async (req: Request, res: Response) => {
 // POST /api/admin/bookings/filter
 export const filterAdminBookings = async (req: Request, res: Response) => {
   try {
-    /* accept either key set */
-    const start = req.body.start     ?? req.body.startDate;
-    const end   = req.body.end       ?? req.body.endDate;
+    const start = req.body.start ?? req.body.startDate;
+    const end = req.body.end ?? req.body.endDate;
 
     if (!start || !end) {
-     res.status(400).json({ message: 'start / end date required' });
-     return
+      res.status(400).json({ message: 'start / end date required' });
+      return;
     }
 
     const bookings = await Booking.find({
       reservationDate: { $gte: start, $lte: end },
     }).sort({ reservationDate: -1 });
 
-    res.json(bookings);
+    const users = await User.find({}, 'userId address phone');
+
+    const enriched = bookings.map((booking) => {
+      const user = users.find((u) => u.userId === booking.user);
+      return {
+        ...booking.toObject(),
+        userAddress: user?.address || null,
+        userPhone: user?.phone || null,
+      };
+    });
+
+    res.json(enriched);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
 };
+
 
 // PATCH /api/admin/bookings/:id/status
 export const updateBookingStatus = async (req: Request, res: Response):Promise<void> => {
