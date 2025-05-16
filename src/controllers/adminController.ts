@@ -10,14 +10,17 @@ export const getAllBookings = async (req: Request, res: Response) => {
     const users = await User.find({}, 'userId address phone'); // only pull fields we need
 
     const enriched = bookings.map((booking) => {
-      const user = users.find((u) => u.userId === booking.user);
-      return {
-        ...booking.toObject(),
-        userAddress: user?.address || null,
-        userPhone: user?.phone || null,
-      };
-    });
+    const user = users.find((u) => u.userId === booking.user);
+    const fullAddress = user
+    ? `${user.address ?? ''} ${user.addressDetail ?? ''}`.trim()
+    : null;
 
+  return {
+    ...booking.toObject(),
+    userAddress: fullAddress,
+    userPhone: user?.phone ?? null,
+  };
+});
     res.json(enriched);
   } catch (err) {
     console.error(err);
@@ -40,16 +43,21 @@ export const filterAdminBookings = async (req: Request, res: Response) => {
       reservationDate: { $gte: start, $lte: end },
     }).sort({ reservationDate: -1 });
 
-    const users = await User.find({}, 'userId address phone');
+    const users = await User.find({}, 'userId address addressDetail phone');
 
     const enriched = bookings.map((booking) => {
-      const user = users.find((u) => u.userId === booking.user);
-      return {
-        ...booking.toObject(),
-        userAddress: user?.address || null,
-        userPhone: user?.phone || null,
-      };
-    });
+    const user = users.find((u) => u.userId === booking.user);
+
+    const fullAddress = user
+      ? `${user.address ?? ''} ${user.addressDetail ?? ''}`.trim()
+      : null;
+
+    return {
+      ...booking.toObject(),
+      userAddress: fullAddress,
+      userPhone: user?.phone ?? null,
+    };
+  });
 
     res.json(enriched);
   } catch (err) {
