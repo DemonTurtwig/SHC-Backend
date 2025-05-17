@@ -12,7 +12,7 @@ export const getAllBookings = async (req: Request, res: Response) => {
     const enriched = bookings.map((booking) => {
     const user = users.find((u) => u.userId === booking.user);
     const fullAddress = user
-    ? `${user.address ?? ''} ${user.addressDetail ?? ''}`.trim()
+    ? `${(user.address ?? '').trim()} ${(user.addressDetail ?? '').trim()}`.trim()
     : null;
 
   return {
