@@ -49,8 +49,8 @@ export const filterAdminBookings = async (req: Request, res: Response) => {
     const user = users.find((u) => u.userId === booking.user);
 
     const fullAddress = user
-      ? `${user.address ?? ''} ${user.addressDetail ?? ''}`.trim()
-      : null;
+    ? `${(user.address ?? '').trim()} ${(user.addressDetail ?? '').trim()}`.trim()
+    : null;
 
     return {
       ...booking.toObject(),
