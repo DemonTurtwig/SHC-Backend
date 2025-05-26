@@ -7,7 +7,7 @@ export const findOrCreateKakaoUser = async (kakaoProfile: any) => {
   const kakaoId = kakaoProfile.id;
   const kakaoEmail = kakaoProfile.kakao_account?.email || `kakao_${kakaoId}@noemail.com`;
   const kakaoNickname = kakaoProfile.properties?.nickname || '카카오 유저';
-
+  const kakaoPhone = kakaoAcct.phone_number?.replace(/\D/g, '');
   let user = await User.findOne({ email: kakaoEmail });
 
   if (!user) {
@@ -16,6 +16,7 @@ export const findOrCreateKakaoUser = async (kakaoProfile: any) => {
   email: kakaoEmail,
   name: kakaoNickname,
   provider: 'kakao',
+  phone: kakaoPhone || '',
   userId: newUserId,
   isGuest: false,
   isAdmin: false,
