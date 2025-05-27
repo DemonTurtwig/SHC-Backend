@@ -48,7 +48,7 @@ export const kakaoLogin = async (req: Request, res: Response): Promise<void> => 
     if (!rawPhone) {
       res.status(409).json({
         code: "PHONE_REQUIRED",
-        message: "전화번호 권한이 허용되지 않았습니다.",
+        message: "카카오에서 전화번호 권한을 거부하셨습니다. 설정에서 전화번호를 입력해주세요.",
         user,
       });
       return;
@@ -59,6 +59,7 @@ export const kakaoLogin = async (req: Request, res: Response): Promise<void> => 
       message: "카카오 로그인에 성공했습니다.",
       user,
       token,
+      needsPhoneUpdate: !rawPhone,
     });
   } catch (err) {
     console.error("Kakao login error:", err);
