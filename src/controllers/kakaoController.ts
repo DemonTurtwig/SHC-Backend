@@ -5,78 +5,68 @@ import { findOrCreateKakaoUser } from '../services/kakaoService';
 
 export const kakaoLogin = async (req: Request, res: Response): Promise<void> => {
   const { accessToken } = req.body;
-
   if (!accessToken) {
-   res.status(400).json({ message: 'Access token is required.' });
-   return;
+    res.status(400).json({ message: 'Access token is required.' });
+    return;
   }
 
   try {
-    const kakaoUserRes = await axios.get('https://kapi.kakao.com/v2/user/me', {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
-      },
+    /* 1 ── fetch Kakao profile */
+    const { data: kakaoProfile } = await axios.get(
+      'https://kapi.kakao.com/v2/user/me',
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
+        },
+      }
+    );
+
+    /* 2 ── extract phone (may be null if user refused scope) */
+    const kakaoAcct  = kakaoProfile.kakao_account ?? {};
+    const rawPhone   = kakaoAcct.phone_number?.replace(/\D/g, '');
+    const safePhone  =
+      rawPhone || `010${Math.floor(10000000 + Math.random() * 90000000)}`;
+
+    /* 3 ── save the user (service now expects phone) */
+    const user = await findOrCreateKakaoUser({
+      ...kakaoProfile,
+      phone: safePhone,
     });
 
-    const kakaoProfile = kakaoUserRes.data;
+    /* 4 ── if placeholder used, tell the app to collect the real phone */
+    if (!rawPhone) {
+      res.status(409).json({
+        code: 'PHONE_REQUIRED',
+        message: '전화번호 권한이 허용되지 않았습니다.',
+        user,
+      });
+      return;
+    }
 
-    const user = await findOrCreateKakaoUser(kakaoProfile);
-
+    /* 5 ── normal success path */
     const token = jwt.sign(
       {
         _id: user._id,
         email: user.email,
         userId: user.userId,
-        isAdmin: user.isAdmin || false,
+        isAdmin: user.isAdmin,
       },
-        process.env.JWT_SECRET!,
-        { expiresIn: '7d' }
-        );
+      process.env.JWT_SECRET!,
+      { expiresIn: '7d' }
+    );
 
-        res.status(200).json({
-          message: '카카오 로그인에 성공했습니다.',
-          user,
-          token,
-        });
-
+    res.status(200).json({
+      message: '카카오 로그인에 성공했습니다.',
+      user,
+      token,
+    });
   } catch (err) {
     console.error('Kakao login error:', err);
     res.status(500).json({ message: '카카오 로그인에 실패했습니다.' });
   }
 };
 
-export const searchKakaoAddress = async (req: Request, res: Response): Promise<void> => {
-  const query = String(req.query.query ?? '').trim();
-
-  if (!query) {
-    res.status(400).json({ message: '주소 쿼리가 필요합니다.' });
-    return;
-  }
-  if (!process.env.KAKAO_REST_API_KEY) {
-    console.error('❗ Kakao REST API Key is missing');
-    res.status(500).json({ message: '서버 환경변수 오류' });
-    return;
-  }
-
-  try {
-    const response = await axios.get('https://dapi.kakao.com/v2/local/search/address.json', {
-      headers: {
-        Authorization: `KakaoAK ${process.env.KAKAO_REST_API_KEY}`,
-      },
-      params: {
-        query,
-        category_group_code: 'AD5',
-        size: 30,
-      },
-    });
-
-    res.status(200).json(response.data);
-  } catch (err: any) {
-    console.error('Kakao API 오류:', err?.response?.data || err.message);
-    res.status(500).json({ message: '카카오 주소 검색 실패' });
-  }
-};
 
 export const searchExpandedRoad = async (req: Request, res: Response): Promise<void> => {
   const base = req.query.query?.toString();
