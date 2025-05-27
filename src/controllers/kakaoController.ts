@@ -29,27 +29,33 @@ export const kakaoLogin = async (req: Request, res: Response): Promise<void> => 
       rawPhone ||
       `010${(kakaoProfile.id % 10_000_000_00).toString().padStart(8, "0")}`; // placeholder
 
-    /* 3 ─ create or find user */
-    const user = await findOrCreateKakaoUser({ ...kakaoProfile, phone });
+    /* 3 – create / find user (unchanged) */
+const user = await findOrCreateKakaoUser({ ...kakaoProfile, phone });
 
-    /* 4 ─ issue JWT */
-    const token = jwt.sign(
-      {
-        _id: user._id,
-        email: user.email,
-        userId: user.userId,
-        isAdmin: user.isAdmin,
-      },
-      process.env.JWT_SECRET!,
-      { expiresIn: "7d" }
-    );
-    /* 5 ─ success */
-    res.status(200).json({
-      message: "카카오 로그인에 성공했습니다.",
-      user,
-      token,
-      needsPhoneUpdate: !rawPhone,
-    });
+/* 4 – calculate whether the user must be prompted */
+const needsPhoneUpdate = !rawPhone;
+
+/* 5 – sign JWT  ➜  include provider + phoneNeedsUpdate */
+const token = jwt.sign(
+  {
+    _id: user._id,
+    email: user.email,
+    userId: user.userId,
+    isAdmin: user.isAdmin,
+    provider: 'kakao',
+    phoneNeedsUpdate: needsPhoneUpdate,
+  },
+  process.env.JWT_SECRET!,
+  { expiresIn: '7d' },
+);
+
+/* 6 – respond */
+res.status(200).json({
+  message: '카카오 로그인에 성공했습니다.',
+  user,
+  token,
+  needsPhoneUpdate,
+});
   } catch (err) {
     console.error("Kakao login error:", err);
     res.status(500).json({ message: "카카오 로그인에 실패했습니다." });
