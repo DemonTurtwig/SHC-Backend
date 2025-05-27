@@ -1,50 +1,38 @@
-import { Request, Response } from 'express';
-import axios from 'axios';
-import jwt from 'jsonwebtoken';
-import { findOrCreateKakaoUser } from '../services/kakaoService';
+import { Request, Response } from "express";
+import axios from "axios";
+import jwt from "jsonwebtoken";
+import { findOrCreateKakaoUser } from "../services/kakaoService";
 
 export const kakaoLogin = async (req: Request, res: Response): Promise<void> => {
   const { accessToken } = req.body;
   if (!accessToken) {
-    res.status(400).json({ message: 'Access token is required.' });
+    res.status(400).json({ message: "Access token is required." });
     return;
   }
 
   try {
-    /* 1 ── fetch Kakao profile */
+    /* 1 ─ fetch user profile from Kakao */
     const { data: kakaoProfile } = await axios.get(
-      'https://kapi.kakao.com/v2/user/me',
+      "https://kapi.kakao.com/v2/user/me",
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
+          "Content-Type": "application/x-www-form-urlencoded;charset=utf-8",
         },
       }
     );
 
-    /* 2 ── extract phone (may be null if user refused scope) */
-    const kakaoAcct  = kakaoProfile.kakao_account ?? {};
-    const rawPhone   = kakaoAcct.phone_number?.replace(/\D/g, '');
-    const safePhone  =
-      rawPhone || `010${Math.floor(10000000 + Math.random() * 90000000)}`;
+    /* 2 ─ normalise / fallback phone */
+    const acct = kakaoProfile.kakao_account ?? {};
+    const rawPhone = acct.phone_number?.replace(/\D/g, "");
+    const phone =
+      rawPhone ||
+      `010${(kakaoProfile.id % 10_000_000_00).toString().padStart(8, "0")}`; // placeholder
 
-    /* 3 ── save the user (service now expects phone) */
-    const user = await findOrCreateKakaoUser({
-      ...kakaoProfile,
-      phone: safePhone,
-    });
+    /* 3 ─ create or find user */
+    const user = await findOrCreateKakaoUser({ ...kakaoProfile, phone });
 
-    /* 4 ── if placeholder used, tell the app to collect the real phone */
-    if (!rawPhone) {
-      res.status(409).json({
-        code: 'PHONE_REQUIRED',
-        message: '전화번호 권한이 허용되지 않았습니다.',
-        user,
-      });
-      return;
-    }
-
-    /* 5 ── normal success path */
+    /* 4 ─ issue JWT */
     const token = jwt.sign(
       {
         _id: user._id,
@@ -53,17 +41,28 @@ export const kakaoLogin = async (req: Request, res: Response): Promise<void> => 
         isAdmin: user.isAdmin,
       },
       process.env.JWT_SECRET!,
-      { expiresIn: '7d' }
+      { expiresIn: "7d" }
     );
 
+    /* 5 ─ if placeholder used, tell client to prompt real phone */
+    if (!rawPhone) {
+      res.status(409).json({
+        code: "PHONE_REQUIRED",
+        message: "전화번호 권한이 허용되지 않았습니다.",
+        user,
+      });
+      return;
+    }
+
+    /* 6 ─ success */
     res.status(200).json({
-      message: '카카오 로그인에 성공했습니다.',
+      message: "카카오 로그인에 성공했습니다.",
       user,
       token,
     });
   } catch (err) {
-    console.error('Kakao login error:', err);
-    res.status(500).json({ message: '카카오 로그인에 실패했습니다.' });
+    console.error("Kakao login error:", err);
+    res.status(500).json({ message: "카카오 로그인에 실패했습니다." });
   }
 };
 
