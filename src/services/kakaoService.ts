@@ -3,17 +3,13 @@ import axios from "axios";
 import User from "../models/User";
 import { generateUserId } from "../utils/generateUserId";
 
-export const findOrCreateKakaoUser = async (kakao: any) => {
-  const kakaoId    = kakao.id;
-  const acct       = kakao.kakao_account ?? {};
-  const nick       = kakao.properties?.nickname ?? '카카오 유저';
-  const email      = acct.email ?? `kakao_${kakaoId}@noemail.com`;
-  const rawPhone   = acct.phone_number?.replace(/\D/g, '');
+export const findOrCreateKakaoUser = async (profile: any) => {
+  const kakaoId = profile.id;
+  const acct = profile.kakao_account ?? {};
 
-  // fallback: 010 + last 8 digits of kakaoId + random digit
-  const phone      = rawPhone || `010${(kakaoId % 10_000_000_00)
-                                     .toString()
-                                     .padStart(8, '0')}`;
+  const email = acct.email ?? `kakao_${kakaoId}@noemail.com`;
+  const phone = profile.phone as string; // already set in controller
+  const nick = profile.properties?.nickname ?? "카카오 유저";
 
   let user = await User.findOne({ email });
   if (!user) {
@@ -21,13 +17,14 @@ export const findOrCreateKakaoUser = async (kakao: any) => {
       email,
       name: nick,
       phone,
-      provider: 'kakao',
+      provider: "kakao",
       userId: await generateUserId(),
       isGuest: false,
       isAdmin: false,
       emailVerified: true,
     });
   }
+
   return user;
 };
 
