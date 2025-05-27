@@ -46,6 +46,7 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
         addressDetail,
         isGuest: true,
         provider: 'guest',
+        phoneNeedsUpdate: false,
       });
     
       await guest.save();
@@ -56,6 +57,7 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
           userId: guest.userId,
           isAdmin: false,
           isGuest: true,
+          phoneNeedsUpdate: false,
         },
         process.env.JWT_SECRET!,
         { expiresIn: '90d' }
@@ -84,7 +86,7 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
     }
 
     const hashed = await bcrypt.hash(password, 10);
-    const newUserId = await generateUserId();
+    const newUserId = await generateUserId(); // also assign to standard users
 
     const user = new User({
       userId: newUserId,
@@ -96,6 +98,7 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
       addressDetail,
       isGuest: false,
       provider: 'standard',
+      phoneNeedsUpdate: false,
     });
 
     await user.save();
