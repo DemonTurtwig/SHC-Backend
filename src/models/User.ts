@@ -4,10 +4,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 export interface IUser extends Document {
   userId?: number;
   name: string;
-  phone: string,
-  required() {
-    return this.provider === 'standard' || this.provider === 'guest';
-  };
+  phone: string;
   email?: string;
   password?: string;
   address?: string;
