@@ -15,6 +15,7 @@ export interface IUser extends Document {
   provider?: 'standard' | 'kakao' | 'guest';
   providerId?: string;
   emailVerified: boolean;
+  phoneNeedsUpdate: { type: Boolean, default: false },
 }
 
 
@@ -75,6 +76,11 @@ const UserSchema = new mongoose.Schema({
   providerId: {
     type: String,
     required: false,
+  },
+
+  phoneNeedsUpdate: 
+  {type: Boolean,
+    default: "false",
   },
   emailVerified: {
     type: Boolean,
