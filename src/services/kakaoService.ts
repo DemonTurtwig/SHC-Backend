@@ -3,29 +3,31 @@ import axios from "axios";
 import User from "../models/User";
 import { generateUserId } from "../utils/generateUserId";
 
-export const findOrCreateKakaoUser = async (kakaoProfile: any) => {
-  const kakaoId       = kakaoProfile.id;
-  const kakaoAcct     = kakaoProfile.kakao_account ?? {};
-  const kakaoEmail    = kakaoAcct.email || `kakao_${kakaoId}@noemail.com`;
-  const kakaoNickname = kakaoProfile.properties?.nickname || "카카오 유저";
-  const kakaoPhone    = kakaoAcct.phone_number?.replace(/\D/g, ""); // strip +82-10-…
+export const findOrCreateKakaoUser = async (kakao: any) => {
+  const kakaoId    = kakao.id;
+  const acct       = kakao.kakao_account ?? {};
+  const nick       = kakao.properties?.nickname ?? '카카오 유저';
+  const email      = acct.email ?? `kakao_${kakaoId}@noemail.com`;
+  const rawPhone   = acct.phone_number?.replace(/\D/g, '');
 
-  let user = await User.findOne({ email: kakaoEmail });
+  // fallback: 010 + last 8 digits of kakaoId + random digit
+  const phone      = rawPhone || `010${(kakaoId % 10_000_000_00)
+                                     .toString()
+                                     .padStart(8, '0')}`;
 
+  let user = await User.findOne({ email });
   if (!user) {
-    const newUserId = await generateUserId();
     user = await User.create({
-      email: kakaoEmail,
-      name: kakaoNickname,
-      phone: kakaoPhone || "",
-      provider: "kakao",
-      userId: newUserId,
+      email,
+      name: nick,
+      phone,
+      provider: 'kakao',
+      userId: await generateUserId(),
       isGuest: false,
       isAdmin: false,
       emailVerified: true,
     });
   }
-
   return user;
 };
 
@@ -57,4 +59,3 @@ export const searchKakaoAddress = async (query: string) => {
 
   return response.data;
 };
-
