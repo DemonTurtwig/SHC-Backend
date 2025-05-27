@@ -30,7 +30,9 @@ const UserSchema = new mongoose.Schema({
   },
   phone: {
     type: String,
-    required: true,
+    required(this: IUser) {
+      return this.provider === 'standard' || this.provider === 'guest';
+    },
   },
   email: {
     type: String,
