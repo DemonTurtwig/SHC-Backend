@@ -43,18 +43,7 @@ export const kakaoLogin = async (req: Request, res: Response): Promise<void> => 
       process.env.JWT_SECRET!,
       { expiresIn: "7d" }
     );
-
-    /* 5 ─ if placeholder used, tell client to prompt real phone */
-    if (!rawPhone) {
-      res.status(409).json({
-        code: "PHONE_REQUIRED",
-        message: "카카오에서 전화번호 권한을 거부하셨습니다. 설정에서 전화번호를 입력해주세요.",
-        user,
-      });
-      return;
-    }
-
-    /* 6 ─ success */
+    /* 5 ─ success */
     res.status(200).json({
       message: "카카오 로그인에 성공했습니다.",
       user,
