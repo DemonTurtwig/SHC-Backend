@@ -146,9 +146,9 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
 };
 
 export const updateUser = async (req: Request, res: Response): Promise<void> => {
-  const { name, phone, password } = req.body;
+  const { name, phone, password, address, addressDetail } = req.body;
 
-  if (!name && !phone && !password) {
+  if (!name && !phone && !password && !address && !addressDetail) {
     res.status(400).json({ message: '업데이트할 필드가 없습니다.' });
     return;
   }
@@ -157,6 +157,8 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
     const updates: Record<string, any> = {};
     if (name) updates.name = name;
     if (phone) updates.phone = phone;
+    if (address !== undefined) updates.address = address;
+    if (addressDetail !== undefined)  updates.addressDetail  = addressDetail;
 
     if (password) {
       const hashed = await bcrypt.hash(password, 10);
