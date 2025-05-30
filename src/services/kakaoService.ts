@@ -4,14 +4,14 @@ import User from "../models/User";
 import { generateUserId } from "../utils/generateUserId";
 
 export const findOrCreateKakaoUser = async (profile: any) => {
-  const kakaoId = profile.id;
+  const kakaoId = String(profile.id);
   const acct = profile.kakao_account ?? {};
   const email = acct.email ?? `kakao_${kakaoId}@noemail.com`;
   const phone = profile.phone as string;
   const phoneNeedsUpdate = profile.phoneNeedsUpdate as boolean ?? false;
   const nick = profile.properties?.nickname ?? "카카오 유저";
 
-  let user = await User.findOne({ email });
+  let user = await User.findOne({ kakaoId });
   if (!user) {
     user = await User.create({
       email,
@@ -19,6 +19,7 @@ export const findOrCreateKakaoUser = async (profile: any) => {
       phone,
       provider: "kakao",
       userId: await generateUserId(),
+      kakaoId,
       isGuest: false,
       isAdmin: false,
       emailVerified: true,
