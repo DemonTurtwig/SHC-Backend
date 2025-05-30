@@ -134,7 +134,7 @@ export const kakaoUnlink = async (req: Request, res: Response) : Promise<void> =
   try {
     const user = await User.findById(req.user?._id);
     if (!user || user.provider !== 'kakao' || !user.kakaoId) {
-       res.status(400).json({ message: '유효하지 않은 카카오 유저입니다다.' });
+       res.status(400).json({ message: '유효하지 않은 카카오 유저입니다.' });
        return
     }
 
