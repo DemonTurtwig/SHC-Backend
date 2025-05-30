@@ -133,14 +133,14 @@ export { findOrCreateKakaoUser };
 export const kakaoUnlink = async (req: Request, res: Response) : Promise<void> => {
   try {
     const user = await User.findById(req.user?._id);
-    if (!user || user.provider !== 'kakao' || !user.userId) {
+    if (!user || user.provider !== 'kakao' || !user.kakaoId) {
        res.status(400).json({ message: '유효하지 않은 카카오 유저입니다다.' });
        return
     }
 
     await axios.post(
       'https://kapi.kakao.com/v1/user/unlink',
-      `target_id_type=user_id&target_id=${user.userId}`,
+      `target_id_type=user_id&target_id=${user.kakaoId}`,
       {
         headers: {
           Authorization: `KakaoAK ${process.env.KAKAO_ADMIN_KEY}`,
