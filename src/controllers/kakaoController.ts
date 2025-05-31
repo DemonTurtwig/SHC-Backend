@@ -8,61 +8,92 @@ import User from '../models/User';
 export const kakaoLogin = async (req: Request, res: Response): Promise<void> => {
   const { accessToken } = req.body;
   if (!accessToken) {
-    res.status(400).json({ message: "Access token is required." });
+    res.status(400).json({ message: 'Access token is required.' });
     return;
   }
 
   try {
-    /* 1 ─ fetch user profile from Kakao */
+    /* 1 ─ fetch user profile */
     const { data: kakaoProfile } = await axios.get(
-      "https://kapi.kakao.com/v2/user/me",
+      'https://kapi.kakao.com/v2/user/me',
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/x-www-form-urlencoded;charset=utf-8",
+          'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
         },
       }
     );
 
+    /* 1-b ─ fetch default shipping address (no-scope → ignore) */
+    let shippingAddr:
+      | { base_address?: string; detail_address?: string }
+      | null = null;
+
+    try {
+      const { data: addrRes } = await axios.get(
+        'https://kapi.kakao.com/v1/user/shipping_address',
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+          params: { address_id: 'default' },
+        }
+      );
+
+      const def = addrRes.shipping_addresses?.find((a: any) => a.is_default);
+      if (def) {
+        shippingAddr = {
+          base_address: def.base_address,
+          detail_address: def.detail_address ?? '',
+        };
+      }
+    } catch (_) {
+      /* 403 when user hasn’t granted the scope → just continue */
+    }
+
     /* 2 ─ normalise / fallback phone */
     const acct = kakaoProfile.kakao_account ?? {};
-    const rawPhone = acct.phone_number?.replace(/\D/g, "");
+    const rawPhone = acct.phone_number?.replace(/\D/g, '');
     const phone =
       rawPhone ||
-      `010${(kakaoProfile.id % 10_000_000_00).toString().padStart(8, "0")}`; // placeholder
+      `010${(kakaoProfile.id % 10_000_000_00).toString().padStart(8, '0')}`; // placeholder
 
-    /* 3 – create / find user (unchanged) */
-const user = await findOrCreateKakaoUser({ ...kakaoProfile, phone });
+    /* 3 ─ create / find user */
+    const user = await findOrCreateKakaoUser({
+      ...kakaoProfile,
+      phone,
+      shippingAddr,
+    });
 
-/* 4 – calculate whether the user must be prompted */
-const needsPhoneUpdate = !rawPhone;
+    /* 4 ─ prompt check */
+    const needsPhoneUpdate = !rawPhone;
 
-/* 5 – sign JWT  ➜  include provider + phoneNeedsUpdate */
-const token = jwt.sign(
-  {
-    _id: user._id,
-    email: user.email,
-    userId: user.userId,
-    isAdmin: user.isAdmin,
-    provider: 'kakao',
-    phoneNeedsUpdate: needsPhoneUpdate,
-  },
-  process.env.JWT_SECRET!,
-  { expiresIn: '7d' },
-);
+    /* 5 ─ sign JWT */
+    const token = jwt.sign(
+      {
+        _id: user._id,
+        email: user.email,
+        userId: user.userId,
+        isAdmin: user.isAdmin,
+        provider: 'kakao',
+        phoneNeedsUpdate: needsPhoneUpdate,
+      },
+      process.env.JWT_SECRET!,
+      { expiresIn: '7d' }
+    );
 
-/* 6 – respond */
-res.status(200).json({
-  message: '카카오 로그인에 성공했습니다.',
-  user,
-  token,
-  needsPhoneUpdate,
-});
+    /* 6 ─ respond */
+    res.status(200).json({
+      message: '카카오 로그인에 성공했습니다.',
+      user,
+      token,
+      needsPhoneUpdate,
+      shippingAddr,
+    });
   } catch (err) {
-    console.error("Kakao login error:", err);
-    res.status(500).json({ message: "카카오 로그인에 실패했습니다." });
+    console.error('Kakao login error:', err);
+    res.status(500).json({ message: '카카오 로그인에 실패했습니다.' });
   }
 };
+
 
 export const searchKakaoAddress = async (req: Request, res: Response): Promise<void> => {
   const query = String(req.query.query ?? '').trim();
