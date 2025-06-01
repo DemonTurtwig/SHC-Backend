@@ -13,21 +13,31 @@ export const findOrCreateKakaoUser = async (profile: any) => {
 
   let user = await User.findOne({ kakaoId });
   if (!user) {
-    user = await User.create({
-      email,
-      name: nick,
-      phone,
-      provider: "kakao",
-      userId: await generateUserId(),
-      kakaoId,
-      isGuest: false,
-      isAdmin: false,
-      emailVerified: true,
-      address: profile.shippingAddr?.base_address ?? '',
-      addressDetail: profile.shippingAddr?.detail_address ?? '',
-    });
+  user = await User.create({
+    email,
+    name: nick,
+    phone,
+    provider: "kakao",
+    userId: await generateUserId(),
+    kakaoId,
+    isGuest: false,
+    isAdmin: false,
+    emailVerified: true,
+    address: profile.shippingAddr?.base_address ?? '',
+    addressDetail: profile.shippingAddr?.detail_address ?? '',
+  });
+} else {
+  let updated = false;
+  if (!user.address && profile.shippingAddr?.base_address) {
+    user.address = profile.shippingAddr.base_address;
+    updated = true;
   }
-
+  if (!user.addressDetail && profile.shippingAddr?.detail_address) {
+    user.addressDetail = profile.shippingAddr.detail_address;
+    updated = true;
+  }
+  if (updated) await user.save();
+}
   return user;
 };
 
