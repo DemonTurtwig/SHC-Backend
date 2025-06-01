@@ -23,6 +23,8 @@ export const findOrCreateKakaoUser = async (profile: any) => {
       isGuest: false,
       isAdmin: false,
       emailVerified: true,
+      address: profile.shippingAddr?.base_address ?? '',
+      addressDetail: profile.shippingAddr?.detail_address ?? '',
     });
   }
 
