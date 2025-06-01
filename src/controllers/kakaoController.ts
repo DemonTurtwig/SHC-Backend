@@ -51,11 +51,21 @@ export const kakaoLogin = async (req: Request, res: Response): Promise<void> => 
 
     /* 2 ─ normalise / fallback phone */
     const acct = kakaoProfile.kakao_account ?? {};
-    const rawPhone = acct.phone_number?.replace(/\D/g, '');
-    const phone =
-      rawPhone ||
-      `010${(kakaoProfile.id % 10_000_000_00).toString().padStart(8, '0')}`; // placeholder
+    let rawPhone = acct.phone_number?.replace(/\D/g, '');
+    let phone = '';
 
+    if (rawPhone?.startsWith('82')) {
+      rawPhone = '0' + rawPhone.slice(2); // 8210xxxxxxx → 010xxxxxxx
+      }
+
+    if (rawPhone && rawPhone.length === 11) {
+      // Format to 010-1234-5678
+      phone = `${rawPhone.slice(0, 3)}-${rawPhone.slice(3, 7)}-${rawPhone.slice(7)}`;
+    } else {
+      // Fallback: dummy number in same format
+      const fallback = `010${(kakaoProfile.id % 10_000_000_00).toString().padStart(8, '0')}`;
+      phone = `${fallback.slice(0, 3)}-${fallback.slice(3, 7)}-${fallback.slice(7)}`;
+    }
     /* 3 ─ create / find user */
     const user = await findOrCreateKakaoUser({
       ...kakaoProfile,
