@@ -1,4 +1,3 @@
-// src/controllers/apiController.ts
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -7,6 +6,9 @@ import { generateUserId } from '../utils/generateUserId';
 import { ServiceType } from '../models/applianceModel';
 import Booking from '../models/bookingModel';
 import { TimeSlot } from '../models/timeslotModel';
+import { Option } from '../models/applianceModel';
+import { Pricing } from '../models/applianceModel';
+
 
 const JWT_SECRET = process.env.JWT_SECRET as string;
 
@@ -197,9 +199,6 @@ export const getAllTimeSlots = async (req: Request, res: Response) : Promise<voi
   }
 };
 
-// --- GET /api/options?subtype=... or ?serviceType=...
-import { Option } from '../models/applianceModel';
-
 
 export const getOptions = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -218,7 +217,6 @@ export const getOptions = async (req: Request, res: Response): Promise<void> => 
 };
 
 // --- GET /api/pricing?subtype=...&serviceType=...
-import {Pricing} from '../models/applianceModel'; // must be defined
 
 export const getPricing = async (req: Request, res: Response): Promise<void> => {
   try {
