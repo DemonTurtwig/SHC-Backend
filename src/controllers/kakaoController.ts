@@ -25,33 +25,6 @@ export const kakaoLogin = async (req: Request, res: Response): Promise<void> => 
       }
     );
 
-    /* 1-b ─ fetch default shipping address (no-scope → ignore) */
-    let shippingAddr:
-      | { base_address?: string; detail_address?: string }
-      | null = null;
-
-    try {
-      const { data: addrRes } = await axios.get(
-        'https://kapi.kakao.com/v1/user/shipping_address',
-        {
-          headers: { Authorization: `Bearer ${accessToken}` },
-          params: { address_id: 'default' },
-        }
-      );
-      
-      console.log('Kakao address API response:', addrRes);
-
-      const def = addrRes.shipping_addresses?.find((a: any) => a.is_default);
-      if (def) {
-        shippingAddr = {
-          base_address: def.base_address,
-          detail_address: def.detail_address ?? '',
-        };
-      }
-    } catch (_) {
-      /* 403 when user hasn’t granted the scope → just continue */
-    }
-
     /* 2 ─ normalise / fallback phone */
     const acct = kakaoProfile.kakao_account ?? {};
     let rawPhone = acct.phone_number?.replace(/\D/g, '');
@@ -59,7 +32,7 @@ export const kakaoLogin = async (req: Request, res: Response): Promise<void> => 
 
     if (rawPhone?.startsWith('82')) {
       rawPhone = '0' + rawPhone.slice(2); // 8210xxxxxxx → 010xxxxxxx
-      }
+    }
 
     if (rawPhone && rawPhone.length === 11) {
       // Format to 010-1234-5678
@@ -69,11 +42,12 @@ export const kakaoLogin = async (req: Request, res: Response): Promise<void> => 
       const fallback = `010${(kakaoProfile.id % 10_000_000_00).toString().padStart(8, '0')}`;
       phone = `${fallback.slice(0, 3)}-${fallback.slice(3, 7)}-${fallback.slice(7)}`;
     }
-    /* 3 ─ create / find user */
+
+    /* 3 ─ create / find user (without shipping address) */
     const user = await findOrCreateKakaoUser({
       ...kakaoProfile,
       phone,
-      shippingAddr,
+      shippingAddr: null, // Explicitly null for clarity
     });
 
     /* 4 ─ prompt check */
@@ -99,10 +73,9 @@ export const kakaoLogin = async (req: Request, res: Response): Promise<void> => 
       user,
       token,
       needsPhoneUpdate,
-      shippingAddr,
     });
-  } catch (err) {
-    console.error('Kakao login error:', err);
+  } catch (err: any) {
+    console.error('Kakao login error:', err?.response?.data || err);
     res.status(500).json({ message: '카카오 로그인에 실패했습니다.' });
   }
 };
