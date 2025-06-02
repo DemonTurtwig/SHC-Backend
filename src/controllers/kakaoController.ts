@@ -5,6 +5,7 @@ import { findOrCreateKakaoUser } from "../services/kakaoService";
 import User from '../models/User';
 import Booking from '../models/bookingModel';
 
+
 export const kakaoLogin = async (req: Request, res: Response): Promise<void> => {
   const { accessToken } = req.body;
   if (!accessToken) {
@@ -103,6 +104,7 @@ export const kakaoLogin = async (req: Request, res: Response): Promise<void> => 
   }
 };
 
+
 export const searchKakaoAddress = async (req: Request, res: Response): Promise<void> => {
   const query = String(req.query.query ?? '').trim();
 
@@ -168,33 +170,6 @@ export const searchExpandedRoad = async (req: Request, res: Response): Promise<v
   }
 };
 export { findOrCreateKakaoUser };
-
-export const kakaoUnlink = async (req: Request, res: Response) : Promise<void> => {
-  try {
-    const user = await User.findById(req.user?._id);
-    if (!user || user.provider !== 'kakao' || !user.kakaoId) {
-       res.status(400).json({ message: '유효하지 않은 카카오 유저입니다.' });
-       return
-    }
-
-    await axios.post(
-      'https://kapi.kakao.com/v1/user/unlink',
-      `target_id_type=user_id&target_id=${user.kakaoId}`,
-      {
-        headers: {
-          Authorization: `KakaoAK ${process.env.KAKAO_ADMIN_KEY}`,
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-      }
-    );
-
-    await user.deleteOne();
-    res.status(204).end();
-  } catch (err: any) {
-    console.error('Kakao unlink error:', err?.response?.data || err);
-    res.status(500).json({ message: '카카오 계정 해지에 실패했습니다.' });
-  }
-};
 
 export const deleteKakaoAccount = async (req: Request, res: Response): Promise<void> => {
   try {
