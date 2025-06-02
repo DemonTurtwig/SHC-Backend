@@ -1,70 +1,60 @@
 // src/services/kakaoService.ts
-import axios from "axios";
-import User from "../models/User";
-import { generateUserId } from "../utils/generateUserId";
+import User from '../models/User';
+import { generateUserId } from '../utils/generateUserId';
 
-export const findOrCreateKakaoUser = async ({ kakaoProfile, phone, shippingAddr }: { kakaoProfile: any; phone: string; shippingAddr?: any }) => {
+interface Params {
+  kakaoProfile: any;
+  phone: string;
+  shippingAddr?: { base_address?: string; detail_address?: string } | null;
+}
+
+export const findOrCreateKakaoUser = async ({
+  kakaoProfile,
+  phone,
+  shippingAddr,
+}: Params) => {
   const kakaoId = String(kakaoProfile.id);
-  const acct = kakaoProfile.kakao_account ?? {};
-  const email = acct.email ?? `kakao_${kakaoId}@noemail.com`;
-  const nick = kakaoProfile.properties?.nickname ?? "카카오 유저";
+  const acct    = kakaoProfile.kakao_account ?? {};
+  const email   = acct.email ?? `kakao_${kakaoId}@noemail.com`;
+  const nick    = kakaoProfile.properties?.nickname ?? '카카오 유저';
 
+  // 1️⃣  create if absent
   let user = await User.findOne({ kakaoId });
   if (!user) {
     user = await User.create({
       email,
-      name: nick,
-      phone,
-      provider: "kakao",
-      userId: await generateUserId(),
+      name:    nick,
+      phone,                     // formatted “010-1234-5678”
+      provider: 'kakao',
+      userId:  await generateUserId(),
       kakaoId,
       isGuest: false,
       isAdmin: false,
       emailVerified: true,
-      address: shippingAddr?.base_address ?? '',
+      address:       shippingAddr?.base_address  ?? '',
       addressDetail: shippingAddr?.detail_address ?? '',
     });
-  } else {
-    let updated = false;
-    if (!user.address && shippingAddr?.base_address) {
-      user.address = shippingAddr.base_address;
-      updated = true;
-    }
-    if (!user.addressDetail && shippingAddr?.detail_address) {
-      user.addressDetail = shippingAddr.detail_address;
-      updated = true;
-    }
-    if (updated) await user.save();
   }
+
+  // 2️⃣  **always** run an up-to-date check
+  let mutated = false;
+
+  // address / detail — fill in if we finally have them
+  if (!user.address && shippingAddr?.base_address) {
+    user.address = shippingAddr.base_address;
+    mutated = true;
+  }
+  if (!user.addressDetail && shippingAddr?.detail_address) {
+    user.addressDetail = shippingAddr.detail_address;
+    mutated = true;
+  }
+
+  // phone — update if it was the dummy value and we now have a real one
+  if (user.phone?.startsWith('010-0000') && phone && phone !== user.phone) {
+    user.phone = phone;
+    mutated = true;
+  }
+
+  if (mutated) await user.save();
   return user;
-};
-
-
-export const getKakaoUserInfo = async (accessToken: string) => {
-  const response = await axios.get('https://kapi.kakao.com/v2/user/me', {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
-  return response.data;
-};
-
-export const searchKakaoAddress = async (query: string) => {
-  const apiKey = process.env.KAKAO_REST_API_KEY;
-
-  if (!apiKey) {
-    console.error('❌ Kakao REST API key is missing. Check your .env setup.');
-    throw new Error('Kakao API key not found');
-  }
-
-  const response = await axios.get('https://dapi.kakao.com/v2/local/search/address.json', {
-    headers: {
-      Authorization: `KakaoAK ${apiKey}`,
-    },
-    params: {
-      query,
-    },
-  });
-
-  return response.data;
 };
