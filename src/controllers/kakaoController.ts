@@ -5,7 +5,6 @@ import { findOrCreateKakaoUser } from "../services/kakaoService";
 import User from '../models/User';
 import Booking from '../models/bookingModel';
 
-
 export const kakaoLogin = async (req: Request, res: Response): Promise<void> => {
   const { accessToken } = req.body;
   if (!accessToken) {
@@ -14,69 +13,68 @@ export const kakaoLogin = async (req: Request, res: Response): Promise<void> => 
   }
 
   try {
-    /* 1 ─ fetch user profile */
-    const { data: kakaoProfile } = await axios.get(
-      'https://kapi.kakao.com/v2/user/me',
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
-        },
-      }
-    );
+    /* 1 ─ Parallel fetch profile + address */
+    const [profileRes, addressRes] = await Promise.allSettled([
+      axios.get('https://kapi.kakao.com/v2/user/me', {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      }),
+      axios.get('https://kapi.kakao.com/v1/user/shipping_address', {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        params: { address_id: 'default' },
+      }),
+    ]);
 
-    /* 1-b ─ fetch default shipping address (optional) */
-    let shippingAddr:
-      | { base_address?: string; detail_address?: string }
-      | null = null;
+    if (profileRes.status !== 'fulfilled') {
+      console.error('Kakao profile fetch failed:', profileRes.reason);
+      res.status(500).json({ message: '카카오 프로필 정보를 불러오지 못했습니다.' });
+      return;
+    }
 
-    try {
-      const { data: addrRes } = await axios.get(
-        'https://kapi.kakao.com/v1/user/shipping_address',
-        {
-          headers: { Authorization: `Bearer ${accessToken}` },
-          params: { address_id: 'default' },
-        }
-      );
+    const kakaoProfile = profileRes.value.data;
+    const kakaoId = kakaoProfile?.id;
+    if (!kakaoId) {
+      res.status(500).json({ message: '카카오 ID를 가져오지 못했습니다.' });
+      return;
+    }
 
-      const def = addrRes.shipping_addresses?.find((a: any) => a.is_default);
+    /* 2 ─ Extract address (if available) */
+    let shippingAddr: { base_address?: string; detail_address?: string } | null = null;
+    if (addressRes.status === 'fulfilled') {
+      const def = addressRes.value.data?.shipping_addresses?.find((a: any) => a.is_default);
       if (def) {
         shippingAddr = {
           base_address: def.base_address,
           detail_address: def.detail_address ?? '',
         };
       }
-    } catch (_) {
-      /* No address permission → skip */
     }
 
-    /* 2 ─ normalize / fallback phone */
+    /* 3 ─ Normalize phone */
     const acct = kakaoProfile.kakao_account ?? {};
     let rawPhone = acct.phone_number?.replace(/\D/g, '');
     let phone = '';
 
     if (rawPhone?.startsWith('82')) {
-      rawPhone = '0' + rawPhone.slice(2); // 8210xxxxxxx → 010xxxxxxx
+      rawPhone = '0' + rawPhone.slice(2);
     }
 
     if (rawPhone && rawPhone.length === 11) {
       phone = `${rawPhone.slice(0, 3)}-${rawPhone.slice(3, 7)}-${rawPhone.slice(7)}`;
     } else {
-      const fallback = `010${(kakaoProfile.id % 10_000_000_00).toString().padStart(8, '0')}`;
+      const fallback = `010${(kakaoId % 10_000_000_00).toString().padStart(8, '0')}`;
       phone = `${fallback.slice(0, 3)}-${fallback.slice(3, 7)}-${fallback.slice(7)}`;
     }
 
-    /* 3 ─ create / find user with new signature */
+    /* 4 ─ Find or create user */
     const user = await findOrCreateKakaoUser({
       kakaoProfile,
       phone,
       shippingAddr,
     });
 
-    /* 4 ─ prompt check */
     const needsPhoneUpdate = !rawPhone;
 
-    /* 5 ─ sign JWT */
+    /* 5 ─ Sign JWT */
     const token = jwt.sign(
       {
         _id: user._id,
@@ -90,7 +88,7 @@ export const kakaoLogin = async (req: Request, res: Response): Promise<void> => 
       { expiresIn: '7d' }
     );
 
-    /* 6 ─ respond */
+    /* 6 ─ Respond */
     res.status(200).json({
       message: '카카오 로그인에 성공했습니다.',
       user,
@@ -98,6 +96,7 @@ export const kakaoLogin = async (req: Request, res: Response): Promise<void> => 
       needsPhoneUpdate,
       shippingAddr,
     });
+
   } catch (err: any) {
     console.error('Kakao login error:', err?.response?.data || err);
     res.status(500).json({ message: '카카오 로그인에 실패했습니다.' });
