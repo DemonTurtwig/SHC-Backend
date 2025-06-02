@@ -186,23 +186,23 @@ export const deleteKakaoAccount = async (req: Request, res: Response): Promise<v
 
     // 1️⃣ Unlink Kakao
     try {
-      await axios.post(
-        'https://kapi.kakao.com/v1/user/unlink',
-        `target_id_type=user_id&target_id=${user.kakaoId}`,
-        {
-          headers: {
-            Authorization: `KakaoAK ${process.env.KAKAO_ADMIN_KEY}`,
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-        }
-      );
-      console.log(`✅ Kakao unlink success for ${user.kakaoId}`);
-    } catch (unlinkErr) {
-      console.error('Kakao unlink failed:', (unlinkErr as any)?.response?.data || unlinkErr);
-    }
-
+  await axios.post('https://kapi.kakao.com/v1/user/unlink',
+                   `target_id_type=user_id&target_id=${user.kakaoId}`, {
+    headers: {
+      Authorization: `KakaoAK ${process.env.KAKAO_ADMIN_KEY}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+  });
+  console.log('✅ Kakao unlink success');
+} catch (e: any) {
+  const code = e?.response?.data?.code;
+  if (code !== -101) {
+    console.error('unlink failed:', e?.response?.data || e);
+    throw e;
+  }
+}
     // 2️⃣ Delete bookings (if any)
-    await Booking.deleteMany({ user: user._id });
+    await Booking.deleteMany({ user: user.userId }); 
 
     // 3️⃣ Delete user
     await user.deleteOne();
