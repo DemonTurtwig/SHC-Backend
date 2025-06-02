@@ -1,3 +1,4 @@
+// src/controllers/apiController.ts
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -278,11 +279,9 @@ export const deleteUser = async (req: Request, res: Response): Promise<void> => 
     }
 
     if (isGuest) {
-      // Guest: delete by numeric userId
-      await Booking.deleteMany({ userId });
+      await Booking.deleteMany({ userId: Number(userId) });
     } else {
-      // Regular user: delete by ObjectId reference
-      await Booking.deleteMany({ user: _id });
+      await Booking.deleteMany({ user: Number(userId) });
     }
 
     await User.findByIdAndDelete(_id);
