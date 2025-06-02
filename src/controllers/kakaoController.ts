@@ -38,6 +38,8 @@ export const kakaoLogin = async (req: Request, res: Response): Promise<void> => 
           params: { address_id: 'default' },
         }
       );
+      
+      console.log('Kakao address API response:', addrRes);
 
       const def = addrRes.shipping_addresses?.find((a: any) => a.is_default);
       if (def) {
