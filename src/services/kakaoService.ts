@@ -3,43 +3,42 @@ import axios from "axios";
 import User from "../models/User";
 import { generateUserId } from "../utils/generateUserId";
 
-export const findOrCreateKakaoUser = async (profile: any) => {
-  const kakaoId = String(profile.id);
-  const acct = profile.kakao_account ?? {};
+export const findOrCreateKakaoUser = async ({ kakaoProfile, phone, shippingAddr }: { kakaoProfile: any; phone: string; shippingAddr?: any }) => {
+  const kakaoId = String(kakaoProfile.id);
+  const acct = kakaoProfile.kakao_account ?? {};
   const email = acct.email ?? `kakao_${kakaoId}@noemail.com`;
-  const phone = profile.phone as string;
-  const phoneNeedsUpdate = profile.phoneNeedsUpdate as boolean ?? false;
-  const nick = profile.properties?.nickname ?? "카카오 유저";
+  const nick = kakaoProfile.properties?.nickname ?? "카카오 유저";
 
   let user = await User.findOne({ kakaoId });
   if (!user) {
-  user = await User.create({
-    email,
-    name: nick,
-    phone,
-    provider: "kakao",
-    userId: await generateUserId(),
-    kakaoId,
-    isGuest: false,
-    isAdmin: false,
-    emailVerified: true,
-    address: profile.shippingAddr?.base_address ?? '',
-    addressDetail: profile.shippingAddr?.detail_address ?? '',
-  });
-} else {
-  let updated = false;
-  if (!user.address && profile.shippingAddr?.base_address) {
-    user.address = profile.shippingAddr.base_address;
-    updated = true;
+    user = await User.create({
+      email,
+      name: nick,
+      phone,
+      provider: "kakao",
+      userId: await generateUserId(),
+      kakaoId,
+      isGuest: false,
+      isAdmin: false,
+      emailVerified: true,
+      address: shippingAddr?.base_address ?? '',
+      addressDetail: shippingAddr?.detail_address ?? '',
+    });
+  } else {
+    let updated = false;
+    if (!user.address && shippingAddr?.base_address) {
+      user.address = shippingAddr.base_address;
+      updated = true;
+    }
+    if (!user.addressDetail && shippingAddr?.detail_address) {
+      user.addressDetail = shippingAddr.detail_address;
+      updated = true;
+    }
+    if (updated) await user.save();
   }
-  if (!user.addressDetail && profile.shippingAddr?.detail_address) {
-    user.addressDetail = profile.shippingAddr.detail_address;
-    updated = true;
-  }
-  if (updated) await user.save();
-}
   return user;
 };
+
 
 export const getKakaoUserInfo = async (accessToken: string) => {
   const response = await axios.get('https://kapi.kakao.com/v2/user/me', {
