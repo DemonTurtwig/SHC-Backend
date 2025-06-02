@@ -179,7 +179,7 @@ export const deleteKakaoAccount = async (req: Request, res: Response): Promise<v
       return;
     }
 
-    // 1️⃣ Unlink Kakao
+    /* 1️⃣ unlink on Kakao side — keep as-is */
     try {
       await axios.post(
         'https://kapi.kakao.com/v1/user/unlink',
@@ -189,17 +189,17 @@ export const deleteKakaoAccount = async (req: Request, res: Response): Promise<v
             Authorization: `KakaoAK ${process.env.KAKAO_ADMIN_KEY}`,
             'Content-Type': 'application/x-www-form-urlencoded',
           },
-        }
+        },
       );
-      console.log(`✅ Kakao unlink success for ${user.kakaoId}`);
-    } catch (unlinkErr) {
-      console.error('Kakao unlink failed:', (unlinkErr as any)?.response?.data || unlinkErr);
+    } catch (e) {
+      // unlink failure is not fatal – we still continue with local deletion
+      console.error('Kakao unlink failed:', (e as any).response?.data || e);
     }
 
-    // 2️⃣ Delete bookings (if any)
-    await Booking.deleteMany({ user: user._id });
+    /* 2️⃣ remove all bookings that belong to this numeric userId */
+    await Booking.deleteMany({ user: user.userId });   // <-- fix cast error ✅
 
-    // 3️⃣ Delete user
+    /* 3️⃣ finally remove the user document itself */
     await user.deleteOne();
 
     res.status(200).json({ message: '카카오 계정과 관련 데이터가 삭제되었습니다.' });
