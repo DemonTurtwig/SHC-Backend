@@ -5,6 +5,8 @@ import { kakaoLogin, deleteKakaoAccount, searchKakaoAddress, searchExpandedRoad 
 import { requireAuth } from '../middleware/authMiddleware';
 import { getBookingInitializeData } from '../controllers/bookingController';
 
+
+
 const router = express.Router();
 
 router.post('/register', registerUser);
@@ -23,5 +25,5 @@ router.get('/history', requireAuth, getUserBookingHistory);
 router.patch('/users/me', requireAuth, updateUser);
 router.get('/kakao/expand-address', searchExpandedRoad);
 router.delete('/kakao/delete', requireAuth, deleteKakaoAccount);
-
+router.post('/kakao/delete', requireAuth, deleteKakaoAccount);
 export default router;
