@@ -40,16 +40,21 @@ export const kakaoLogin = async (req: Request, res: Response): Promise<void> => 
 
     /* 2 ─ Extract address (if available) */
     let shippingAddr: { base_address?: string; detail_address?: string } | null = null;
-    if (addressRes.status === 'fulfilled') {
-      const def = addressRes.value.data?.shipping_addresses?.find((a: any) => a.is_default);
-      if (def) {
-        shippingAddr = {
-          base_address: def.base_address,
-          detail_address: def.detail_address ?? '',
-        };
-      }
-    }
 
+if (addressRes.status === 'fulfilled') {
+  const list = addressRes.value.data?.shipping_addresses ?? [];
+
+  // ❶ pick the default one if it exists,
+  // ❷ otherwise just take the very first address.
+  const best = list.find((a: any) => a.is_default) ?? list[0];
+
+  if (best?.base_address) {
+    shippingAddr = {
+      base_address:  best.base_address,
+      detail_address: best.detail_address ?? '',
+    };
+  }
+}
     /* 3 ─ Normalize phone */
     const acct = kakaoProfile.kakao_account ?? {};
     let rawPhone = acct.phone_number?.replace(/\D/g, '');
@@ -179,7 +184,7 @@ export const deleteKakaoAccount = async (req: Request, res: Response): Promise<v
       return;
     }
 
-    /* 1️⃣ unlink on Kakao side — keep as-is */
+    // 1️⃣ Unlink Kakao
     try {
       await axios.post(
         'https://kapi.kakao.com/v1/user/unlink',
@@ -189,17 +194,17 @@ export const deleteKakaoAccount = async (req: Request, res: Response): Promise<v
             Authorization: `KakaoAK ${process.env.KAKAO_ADMIN_KEY}`,
             'Content-Type': 'application/x-www-form-urlencoded',
           },
-        },
+        }
       );
-    } catch (e) {
-      // unlink failure is not fatal – we still continue with local deletion
-      console.error('Kakao unlink failed:', (e as any).response?.data || e);
+      console.log(`✅ Kakao unlink success for ${user.kakaoId}`);
+    } catch (unlinkErr) {
+      console.error('Kakao unlink failed:', (unlinkErr as any)?.response?.data || unlinkErr);
     }
 
-    /* 2️⃣ remove all bookings that belong to this numeric userId */
-    await Booking.deleteMany({ user: user.userId });   // <-- fix cast error ✅
+    // 2️⃣ Delete bookings (if any)
+    await Booking.deleteMany({ user: user._id });
 
-    /* 3️⃣ finally remove the user document itself */
+    // 3️⃣ Delete user
     await user.deleteOne();
 
     res.status(200).json({ message: '카카오 계정과 관련 데이터가 삭제되었습니다.' });
