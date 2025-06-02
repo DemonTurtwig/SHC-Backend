@@ -41,20 +41,10 @@ export const findOrCreateKakaoUser = async (
   let dirty = false;
 
   // ① Address – overwrite if the user has granted the scope later.
-  if (
-    shippingAddr?.base_address &&
-    shippingAddr.base_address !== user.address
-  ) {
-    user.address = shippingAddr.base_address;
-    dirty = true;
-  }
-  if (
-    shippingAddr?.detail_address &&
-    shippingAddr.detail_address !== user.addressDetail
-  ) {
-    user.addressDetail = shippingAddr.detail_address;
-    dirty = true;
-  }
+  if (shippingAddr?.base_address && shippingAddr.base_address !== user.address) {
+  user.address = shippingAddr.base_address;
+  dirty = true;
+}
 
   // ② Phone – replace the dummy “010-0000-xxxx” with the real one.
   if (user.phone?.startsWith('010-0000') && phone !== user.phone) {
