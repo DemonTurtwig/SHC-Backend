@@ -8,53 +8,60 @@ interface Params {
   shippingAddr?: { base_address?: string; detail_address?: string } | null;
 }
 
-export const findOrCreateKakaoUser = async ({
-  kakaoProfile,
-  phone,
-  shippingAddr,
-}: Params) => {
+export const findOrCreateKakaoUser = async (
+  { kakaoProfile, phone, shippingAddr }: {
+    kakaoProfile: any; phone: string; shippingAddr?: { base_address?: string; detail_address?: string } | null;
+  },
+) => {
   const kakaoId = String(kakaoProfile.id);
   const acct    = kakaoProfile.kakao_account ?? {};
   const email   = acct.email ?? `kakao_${kakaoId}@noemail.com`;
   const nick    = kakaoProfile.properties?.nickname ?? '카카오 유저';
 
-  // 1️⃣  create if absent
   let user = await User.findOne({ kakaoId });
+
+  /* ───────────────────────────────────────── create ─ */
   if (!user) {
     user = await User.create({
       email,
-      name:    nick,
-      phone,                     // formatted “010-1234-5678”
+      name:   nick,
+      phone,                        // formatted 010-1234-5678
       provider: 'kakao',
       userId:  await generateUserId(),
       kakaoId,
       isGuest: false,
       isAdmin: false,
       emailVerified: true,
-      address:       shippingAddr?.base_address  ?? '',
+      address:       shippingAddr?.base_address   ?? '',
       addressDetail: shippingAddr?.detail_address ?? '',
     });
   }
 
-  // 2️⃣  **always** run an up-to-date check
-  let mutated = false;
+  /* ─────────────────────────────── keep data in sync ─ */
+  let dirty = false;
 
-  // address / detail — fill in if we finally have them
-  if (!user.address && shippingAddr?.base_address) {
+  // ① Address – overwrite if the user has granted the scope later.
+  if (
+    shippingAddr?.base_address &&
+    shippingAddr.base_address !== user.address
+  ) {
     user.address = shippingAddr.base_address;
-    mutated = true;
+    dirty = true;
   }
-  if (!user.addressDetail && shippingAddr?.detail_address) {
+  if (
+    shippingAddr?.detail_address &&
+    shippingAddr.detail_address !== user.addressDetail
+  ) {
     user.addressDetail = shippingAddr.detail_address;
-    mutated = true;
+    dirty = true;
   }
 
-  // phone — update if it was the dummy value and we now have a real one
-  if (user.phone?.startsWith('010-0000') && phone && phone !== user.phone) {
+  // ② Phone – replace the dummy “010-0000-xxxx” with the real one.
+  if (user.phone?.startsWith('010-0000') && phone !== user.phone) {
     user.phone = phone;
-    mutated = true;
+    dirty = true;
   }
 
-  if (mutated) await user.save();
+  if (dirty) await user.save();
   return user;
 };
