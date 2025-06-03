@@ -181,41 +181,64 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
   }
 };
 
-// Get all time slots
-export const getAvailableTimeSlots = async (req: Request, res: Response) => {
+export const getAvailableTimeSlots = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
-    // 1️⃣ validate / parse date ----------------------------------------
-    const dateStr = String(req.query.date ?? '').trim();          // "2025-06-06"
+    /* 1️⃣ validate + parse */
+    const dateStr = String(req.query.date ?? '').trim(); // "2025-06-06"
     const dateObj = dateStr ? new Date(dateStr) : new Date();
+
     if (Number.isNaN(dateObj.getTime())) {
       res.status(400).json({ message: '잘못된 날짜 형식입니다.' });
       return;
     }
-    const yyyyMMdd = format(dateObj, 'yyyy-MM-dd');               // "2025-06-06"
 
-     // 2️⃣  master list
+    const yyyyMMdd = format(dateObj, 'yyyy-MM-dd');
+
+    /* 2️⃣ master timeslot document */
     const doc = await TimeSlot.findOne();
-    if (!doc) return res.json([]);
+if (!doc) {
+  res.json([]);               // nothing configured
+  return;
+}
 
-    // ---- NEW: give TS a clear type ----------------------------------
-    const slots: string[] = (doc.slots as unknown) as string[];
+const slots: string[] = Array.isArray(doc.slots)
+  ? doc.slots
+      .map((s: any) =>
+        typeof s === 'string'
+          ? s
+          : typeof s?.time === 'string'
+            ? s.time
+            : null,
+      )
+      .filter(Boolean) as string[]
+  : [];
 
-    // 3️⃣  bookings already taken
+if (slots.length === 0) {
+  res.json([]);               // no usable slots
+  return;
+}
+
+    /* 3️⃣ already-taken bookings */
     const booked   = await Booking.find({ reservationDate: yyyyMMdd })
                                   .select('reservationTime -_id')
                                   .lean();
-    const takenSet = new Set(booked.map(b => b.reservationTime));   // {"10:30", …}
+    const takenSet = new Set(booked.map(b => b.reservationTime));
 
-    // 4️⃣  response
+    /* 4️⃣ build + send response */
     const result = slots.map(time => ({
       time,
       available: !takenSet.has(time),
     }));
 
     res.json(result);
+    return;
   } catch (err) {
     console.error('timeslot lookup error:', err);
     res.status(500).json({ message: '시간 정보를 불러오지 못했습니다.' });
+    return;
   }
 };
 
