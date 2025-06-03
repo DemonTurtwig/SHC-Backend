@@ -1,11 +1,9 @@
 // src/routes/apiRoutes.ts
 import express from 'express';
-import { registerUser, updateUser, createBooking, getOptions, getPricing, getCurrentUser, loginUser, deleteUser, getAllServiceTypes, getAllTimeSlots, getUserBookingHistory} from '../controllers/apiController';
+import { registerUser, updateUser, createBooking, getOptions, getPricing, getCurrentUser, loginUser, deleteUser, getAllServiceTypes, getAvailableTimeSlots, getUserBookingHistory} from '../controllers/apiController';
 import { kakaoLogin, deleteKakaoAccount, searchKakaoAddress, searchExpandedRoad } from '../controllers/kakaoController';
 import { requireAuth } from '../middleware/authMiddleware';
 import { getBookingInitializeData } from '../controllers/bookingController';
-
-
 
 const router = express.Router();
 
@@ -16,7 +14,7 @@ router.post('/login', loginUser);
 router.get('/options', getOptions);       
 router.get('/pricing', getPricing);
 router.post('/booking', requireAuth, createBooking);
-router.get('/timeslots', getAllTimeSlots);
+router.get('/timeslots', getAvailableTimeSlots);
 router.get('/users/me', requireAuth, getCurrentUser);
 router.get('/booking/initialize', getBookingInitializeData);
 router.delete('/users/me', requireAuth, deleteUser);
