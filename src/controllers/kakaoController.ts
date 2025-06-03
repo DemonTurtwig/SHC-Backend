@@ -38,23 +38,23 @@ export const kakaoLogin = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
-  /* 2 ─ Extract (first / default) shipping address */
+ /* 2 ─ Extract address (if available) */
 let shippingAddr: { base_address?: string; detail_address?: string } | null = null;
 
 if (addressRes.status === 'fulfilled') {
-  const list: any[] = addressRes.value.data?.shipping_addresses ?? [];
+  const list = addressRes.value.data?.shippingAddresses ?? [];   // ← camel-case
 
-  // (1) default address if any,           (2) otherwise first in list
-  const best = list.find(a => a.is_default) ?? list[0];
+  // 1) prefer the default address, 2) otherwise take the first one
+  const best = list.find((a: any) => a.isDefault) ?? list[0];
 
   if (best) {
-    // the Kakao SDK returns camel-case keys
     shippingAddr = {
-      base_address : best.baseAddress  || best.base_address  || '',
-      detail_address: best.detailAddress || best.detail_address || '',
+      base_address:  (best.baseAddress   ?? best.base_address   ?? '').trim(),
+      detail_address:(best.detailAddress ?? best.detail_address ?? '').trim(),
     };
   }
 }
+
 
     /* 3 ─ Normalize phone */
     const acct = kakaoProfile.kakao_account ?? {};
