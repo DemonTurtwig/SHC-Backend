@@ -89,14 +89,12 @@ export const findOrCreateKakaoUser = async ({
   }
 
   if (dirty) {
-    await user.save();
-    console.log('[Kakao] user updated →', {
-      _id: user._id,
-      address: user.address,
-      addressDetail: user.addressDetail,
-      phone: user.phone,
-    });
-  }
-
+  await user.save();
+  console.log('[Kakao] user saved →', {
+    _id: user._id,
+    address: user.address,
+    addressDetail: user.addressDetail,
+  });
+}
   return user;
 };
