@@ -38,22 +38,31 @@ export const kakaoLogin = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
- /* 2 ─ Extract address (if available) */
+ /* 2 ─ Extract address (accept both snake_case & camelCase) */
 let shippingAddr: { base_address?: string; detail_address?: string } | null = null;
 
 if (addressRes.status === 'fulfilled') {
-  const list = addressRes.value.data?.shippingAddresses ?? [];   // ← camel-case
+  const raw  = addressRes.value.data;
+  const list =
+        raw.shipping_addresses   // REST response
+     ?? raw.shippingAddresses    // SDK style (just in case)
+     ?? [];
 
-  // 1) prefer the default address, 2) otherwise take the first one
-  const best = list.find((a: any) => a.isDefault) ?? list[0];
+  const best = list.find((a: any) => a.is_default || a.isDefault) ?? list[0];
 
   if (best) {
-    shippingAddr = {
-      base_address:  (best.baseAddress   ?? best.base_address   ?? '').trim(),
-      detail_address:(best.detailAddress ?? best.detail_address ?? '').trim(),
-    };
+    const base   = (best.base_address   ?? best.baseAddress  ?? '').trim();
+    const detail = (best.detail_address ?? best.detailAddress?? '').trim();
+
+    if (base || detail) {
+      shippingAddr = { base_address: base, detail_address: detail };
+    }
   }
 }
+
+/* ⚑  ─────────────── see what we decided to store */
+console.log('[Kakao] extracted shippingAddr →', shippingAddr);
+
 
 
     /* 3 ─ Normalize phone */
