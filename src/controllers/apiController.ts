@@ -9,7 +9,7 @@ import Booking from '../models/bookingModel';
 import { TimeSlot } from '../models/timeslotModel';
 import { Option } from '../models/applianceModel';
 import { Pricing } from '../models/applianceModel';
-import { startOfDay, endOfDay, format } from 'date-fns';
+import { yyyymmdd } from '../utils/formatDate';
 
 const JWT_SECRET = process.env.JWT_SECRET as string;
 
@@ -195,7 +195,7 @@ export const getAvailableTimeSlots = async (
       return;
     }
 
-    const yyyyMMdd = format(dateObj, 'yyyy-MM-dd');
+    const yyyyMMdd = yyyymmdd(dateObj); 
 
     /* 2️⃣ master timeslot document */
     const doc = await TimeSlot.findOne();
