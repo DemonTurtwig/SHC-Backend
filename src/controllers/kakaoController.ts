@@ -7,7 +7,7 @@ import Booking from '../models/bookingModel';
 
 
 export const kakaoLogin = async (req: Request, res: Response): Promise<void> => {
-  const { accessToken } = req.body;
+  const { accessToken, shippingAddr: clientAddr } = req.body;
   if (!accessToken) {
     res.status(400).json({ message: 'Access token is required.' });
     return;
@@ -39,7 +39,7 @@ export const kakaoLogin = async (req: Request, res: Response): Promise<void> => 
     }
 
  /* 2 ─ Extract address (accept both snake_case & camelCase) */
-let shippingAddr: { base_address?: string; detail_address?: string } | null = null;
+let shippingAddr:| { base_address?: string; detail_address?: string }| null = null;
 
 if (addressRes.status === 'fulfilled') {
   const raw  = addressRes.value.data;
@@ -59,6 +59,13 @@ if (addressRes.status === 'fulfilled') {
     }
   }
 }
+
+if (!shippingAddr && clientAddr) {
+    shippingAddr = {
+      base_address:   clientAddr.base_address   ?? clientAddr.baseAddress   ?? '',
+      detail_address: clientAddr.detail_address ?? clientAddr.detailAddress ?? '',
+    };
+  }
 
 /* ⚑  ─────────────── see what we decided to store */
 console.log('[Kakao] extracted shippingAddr →', shippingAddr);
