@@ -9,7 +9,7 @@ import Booking from '../models/bookingModel';
 import { TimeSlot } from '../models/timeslotModel';
 import { Option } from '../models/applianceModel';
 import { Pricing } from '../models/applianceModel';
-
+import { startOfDay, endOfDay, format } from 'date-fns';
 
 const JWT_SECRET = process.env.JWT_SECRET as string;
 
@@ -182,21 +182,40 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
 };
 
 // Get all time slots
-export const getAllTimeSlots = async (req: Request, res: Response) : Promise<void> => {
+export const getAvailableTimeSlots = async (req: Request, res: Response) => {
   try {
-    const docs = await TimeSlot.find({});
-    console.log('✅ ALL timeslots fetched:', docs);
-
-    if (docs.length === 0) {
-      console.error('❌ No timeslot documents in collection');
-      res.json([]);
-      return; 
+    // 1️⃣ validate / parse date ----------------------------------------
+    const dateStr = String(req.query.date ?? '').trim();          // "2025-06-06"
+    const dateObj = dateStr ? new Date(dateStr) : new Date();
+    if (Number.isNaN(dateObj.getTime())) {
+      res.status(400).json({ message: '잘못된 날짜 형식입니다.' });
+      return;
     }
+    const yyyyMMdd = format(dateObj, 'yyyy-MM-dd');               // "2025-06-06"
 
-    res.json(docs[0].slots);
+     // 2️⃣  master list
+    const doc = await TimeSlot.findOne();
+    if (!doc) return res.json([]);
+
+    // ---- NEW: give TS a clear type ----------------------------------
+    const slots: string[] = (doc.slots as unknown) as string[];
+
+    // 3️⃣  bookings already taken
+    const booked   = await Booking.find({ reservationDate: yyyyMMdd })
+                                  .select('reservationTime -_id')
+                                  .lean();
+    const takenSet = new Set(booked.map(b => b.reservationTime));   // {"10:30", …}
+
+    // 4️⃣  response
+    const result = slots.map(time => ({
+      time,
+      available: !takenSet.has(time),
+    }));
+
+    res.json(result);
   } catch (err) {
-    console.error('❌ Failed to fetch timeslots:', err);
-    res.status(500).json({ message: 'Failed to fetch timeslots' });
+    console.error('timeslot lookup error:', err);
+    res.status(500).json({ message: '시간 정보를 불러오지 못했습니다.' });
   }
 };
 
