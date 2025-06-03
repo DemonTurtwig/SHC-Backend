@@ -7,6 +7,8 @@ import Booking from '../models/bookingModel';
 
 
 export const kakaoLogin = async (req: Request, res: Response): Promise<void> => {
+  const tag = `[KAKAO ${req.id}]`;
+  console.log(`${tag} start`);
   const { accessToken, shippingAddr: clientAddr } = req.body;
   if (!accessToken) {
     res.status(400).json({ message: 'Access token is required.' });
@@ -14,6 +16,7 @@ export const kakaoLogin = async (req: Request, res: Response): Promise<void> => 
   }
 
   try {
+    console.log(`${tag} calling Kakao APIs …`);
     /* 1 ─ Parallel fetch profile + address */
     const [profileRes, addressRes] = await Promise.allSettled([
       axios.get('https://kapi.kakao.com/v2/user/me', {
@@ -26,7 +29,7 @@ export const kakaoLogin = async (req: Request, res: Response): Promise<void> => 
     ]);
 
     if (profileRes.status !== 'fulfilled') {
-      console.error('Kakao profile fetch failed:', profileRes.reason);
+      console.error(`${tag} profile fetch failed`, profileRes.reason?.response?.data || profileRes.reason);
       res.status(500).json({ message: '카카오 프로필 정보를 불러오지 못했습니다.' });
       return;
     }
@@ -68,7 +71,7 @@ if (!shippingAddr && clientAddr) {
   }
 
 /* ⚑  ─────────────── see what we decided to store */
-console.log('[Kakao] extracted shippingAddr →', shippingAddr);
+console.log(`${tag} shippingAddr chosen →`, shippingAddr);
 
 
 
@@ -97,6 +100,8 @@ console.log('[Kakao] extracted shippingAddr →', shippingAddr);
 
     const needsPhoneUpdate = !rawPhone;
 
+    console.log(`${tag} user _id=${user._id} kakaoId=${kakaoId}`);
+
     /* 5 ─ Sign JWT */
     const token = jwt.sign(
       {
@@ -119,9 +124,9 @@ console.log('[Kakao] extracted shippingAddr →', shippingAddr);
       needsPhoneUpdate,
       shippingAddr,
     });
-
+    console.log(`${tag} success`);
   } catch (err: any) {
-    console.error('Kakao login error:', err?.response?.data || err);
+    console.error(`${tag} ERROR`, err?.response?.data || err);
     res.status(500).json({ message: '카카오 로그인에 실패했습니다.' });
   }
 };
