@@ -2,13 +2,17 @@
 import User from '../models/User';
 import { generateUserId } from '../utils/generateUserId';
 
+/** Both snake-case and camel-case are accepted */
 interface Shipping {
-  base_address?: string;
+  base_address?:   string;
   detail_address?: string;
+  baseAddress?:    string;
+  detailAddress?:  string;
 }
+
 interface Params {
   kakaoProfile: any;
-  phone: string;
+  phone:        string;
   shippingAddr?: Shipping | null;
 }
 
@@ -17,29 +21,41 @@ export const findOrCreateKakaoUser = async ({
   phone,
   shippingAddr = null,
 }: Params) => {
+  /* ────────────── 0. basic normalisation ────────────── */
   const kakaoId = String(kakaoProfile.id);
   const acct    = kakaoProfile.kakao_account ?? {};
   const email   = acct.email ?? `kakao_${kakaoId}@noemail.com`;
   const nick    = kakaoProfile.properties?.nickname ?? '카카오 유저';
 
-  let user = await User.findOne({ kakaoId });
+  /** Convert camel-case keys → snake-case once */
+  if (shippingAddr) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore  (ok: we check for undefined first)
+    shippingAddr.base_address   = shippingAddr.base_address   ?? shippingAddr.baseAddress;
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    shippingAddr.detail_address = shippingAddr.detail_address ?? shippingAddr.detailAddress;
+  }
 
   /* ────────────── 1. create on first login ────────────── */
+  let user = await User.findOne({ kakaoId });
+
   if (!user) {
     user = await User.create({
       email,
-      name: nick,
-      phone,                     // 010-1234-5678 (already formatted)
+      name:     nick,
+      phone,                       // already formatted 010-XXXX-XXXX
       provider: 'kakao',
-      userId: await generateUserId(),
+      userId:   await generateUserId(),
       kakaoId,
-      isGuest: false,
-      isAdmin: false,
+      isGuest:  false,
+      isAdmin:  false,
       emailVerified: true,
       address:       shippingAddr?.base_address   ?? '',
       addressDetail: shippingAddr?.detail_address ?? '',
     });
-    return user;                 // brand-new user is already up-to-date
+
+    return user;                   // brand-new user is up-to-date
   }
 
   /* ────────────── 2. keep existing user in sync ───────── */
@@ -47,25 +63,26 @@ export const findOrCreateKakaoUser = async ({
 
   // a) address
   if (shippingAddr?.base_address) {
-    const newBase = shippingAddr.base_address.trim();
-    if (!user.address?.trim() || user.address !== newBase) {
-      user.address = newBase;
-      dirty = true;
-    }
-  }
-  if (shippingAddr?.detail_address) {
-    const newDetail = shippingAddr.detail_address.trim();
-    if (!user.addressDetail?.trim() || user.addressDetail !== newDetail) {
-      user.addressDetail = newDetail;
+    const base = shippingAddr.base_address.trim();
+    if (!user.address?.trim() || user.address !== base) {
+      user.address = base;
       dirty = true;
     }
   }
 
-  // b) phone – replace dummy 010-0000-xxxx only once we have the real one
+  if (shippingAddr?.detail_address) {
+    const detail = shippingAddr.detail_address.trim();
+    if (!user.addressDetail?.trim() || user.addressDetail !== detail) {
+      user.addressDetail = detail;
+      dirty = true;
+    }
+  }
+
+  // b) phone – replace dummy 010-0000-xxxx once we have a real one
   if (
     user.phone?.startsWith('010-0000') &&
-    phone !== user.phone &&              // formatted real phone
-    phone.length === 13                  // 010-1234-5678
+    phone !== user.phone &&
+    phone.length === 13             // 010-1234-5678
   ) {
     user.phone = phone;
     dirty = true;
