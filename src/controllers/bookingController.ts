@@ -7,7 +7,7 @@ import {
   Option,
   Pricing,
   Asset,
-  TimeSlot
+  TimeSlot,
 } from '../models/applianceModel';
 
 export const getBookingInitializeData = async (req: Request, res: Response): Promise<void> => {
@@ -18,79 +18,97 @@ export const getBookingInitializeData = async (req: Request, res: Response): Pro
       Pricing.find(),
       Asset.find(),
       TimeSlot.find(),
-      ServiceType.find()
+      ServiceType.find(),
     ]);
 
-    const structuredSubtypes = await Promise.all(subtypes.map(async (subtype) => {
-      const subtypeId = subtype._id as Types.ObjectId;
-      const enrichedServices = await Promise.all(
-        subtype.serviceOptions.map(async (service) => {
-          const serviceId = new Types.ObjectId(service._id);
-         if (!service || !service._id) return null;
-        const serviceId = new Types.ObjectId(service._id);
-        const fullService = services.find(s => String(s._id) === String(serviceId));
-          
-if (!fullService) return null;
+    const structuredSubtypes = await Promise.all(
+      subtypes.map(async (subtype) => {
+        const subtypeId = subtype._id as Types.ObjectId;
 
-          const tiers = matchedPricings.map(pr => {
-            const blueprint = assets.find(a =>
-              a.subtype.equals(subtypeId) &&
-              a.serviceType.equals(serviceId) &&
-              a.kind === 'blueprint' &&
-              a.tier === pr.tier
+        const enrichedServices = await Promise.all(
+          subtype.serviceOptions.map(async (service) => {
+            // 🛡️ Defensive: skip invalid populated Object
+            if (!service || typeof service !== 'object' || !service._id) return null;
+
+            const serviceId = new Types.ObjectId(service._id);
+            const fullService = services.find(
+              (s) => String(s._id) === String(serviceId)
+            );
+            if (!fullService) return null;
+
+            const matchedPricings = pricings.filter(
+              (p) =>
+                p.subtype.equals(subtypeId) &&
+                p.serviceType.equals(serviceId)
             );
 
-            const parts = assets.filter(a =>
-              a.subtype.equals(subtypeId) &&
-              a.serviceType.equals(serviceId) &&
-              a.kind === 'part' &&
-              a.tier === pr.tier
+            const tiers = matchedPricings.map((pr) => {
+              const blueprint = assets.find(
+                (a) =>
+                  a.subtype.equals(subtypeId) &&
+                  a.serviceType.equals(serviceId) &&
+                  a.kind === 'blueprint' &&
+                  a.tier === pr.tier
+              );
+
+              const parts = assets.filter(
+                (a) =>
+                  a.subtype.equals(subtypeId) &&
+                  a.serviceType.equals(serviceId) &&
+                  a.kind === 'part' &&
+                  a.tier === pr.tier
+              );
+
+              return {
+                tier: pr.tier,
+                price: pr.price,
+                extraTime: pr.extraTime,
+                assets: {
+                  blueprint: blueprint?.url || null,
+                  parts: parts.map((p) => ({
+                    label: p.label,
+                    partId: p.partId,
+                    url: p.url,
+                  })),
+                },
+              };
+            });
+
+            const relatedOptions = options.filter((opt) =>
+              opt.appliesTo.some((id) =>
+                id instanceof Types.ObjectId
+                  ? id.equals(subtypeId)
+                  : String(id) === String(subtypeId)
+              )
             );
 
             return {
-              tier: pr.tier,
-              price: pr.price,
-              extraTime: pr.extraTime,
-              assets: {
-                blueprint: blueprint?.url || null,
-                parts: parts.map(p => ({
-                  label: p.label,
-                  partId: p.partId,
-                  url: p.url
-                }))
-              }
+              _id: fullService._id,
+              name: fullService.name,
+              label: fullService.label,
+              tiers,
+              options: relatedOptions,
             };
-          });
+          })
+        );
 
-          const relatedOptions = options.filter(opt =>
-            opt.appliesTo.some(id => id.equals(subtypeId))
-          );
+        const filteredServices = enrichedServices.filter(
+          (svc) => svc !== null
+        );
 
-          return {
-            _id: fullService._id,
-            name: fullService.name,
-            label: fullService.label,
-            tiers,
-            options: relatedOptions
-          };
-        })
-      );
-
-      const filteredServices = enrichedServices.filter(svc => svc !== null);
-
-      return {
-        _id: subtype._id,
-        name: subtype.name,
-        iconUrl: subtype.iconUrl,
-        category: subtype.category,
-        serviceOptions: filteredServices
-      };
-      
-    }));
+        return {
+          _id: subtype._id,
+          name: subtype.name,
+          iconUrl: subtype.iconUrl,
+          category: subtype.category,
+          serviceOptions: filteredServices,
+        };
+      })
+    );
 
     res.json({
       subtypes: structuredSubtypes,
-      timeSlots
+      timeSlots,
     });
   } catch (err) {
     console.error('Error in /booking/initialize:', err);
