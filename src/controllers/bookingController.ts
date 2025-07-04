@@ -26,13 +26,11 @@ export const getBookingInitializeData = async (req: Request, res: Response): Pro
       const enrichedServices = await Promise.all(
         subtype.serviceOptions.map(async (service) => {
           const serviceId = new Types.ObjectId(service._id);
-          const fullService = services.find(s => String(s._id) === String(serviceId));
-
-          if (!fullService) return null; // skip if not found
-
-          const matchedPricings = pricings.filter(p =>
-            p.subtype.equals(subtypeId) && p.serviceType.equals(serviceId)
-          );
+         if (!service || !service._id) return null;
+        const serviceId = new Types.ObjectId(service._id);
+        const fullService = services.find(s => String(s._id) === String(serviceId));
+          
+if (!fullService) return null;
 
           const tiers = matchedPricings.map(pr => {
             const blueprint = assets.find(a =>
