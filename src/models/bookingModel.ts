@@ -1,9 +1,13 @@
 import mongoose, { Schema, model, Types } from 'mongoose';
 
-
 interface IBookingOption {
   option: Types.ObjectId;
   choice: string;
+}
+
+interface IBookingFlags {
+  keypadEntry?: boolean;
+  needsParkingPass?: boolean;
 }
 
 interface IBooking {
@@ -12,9 +16,12 @@ interface IBooking {
   isGuest: boolean;
   subtype: Types.ObjectId;
   serviceType: Types.ObjectId;
-  reservationDate: string; // YYYY-MM-DD format
-  reservationTime: string; // e.g., "06:30"
+  reservationDate: string;
+  reservationTime: string;
   options: IBookingOption[];
+  memo?: string;
+  symptom?: string;
+  flags?: IBookingFlags;
   status: '대기' | '확정' | '완료' | '취소';
   totalPrice: number;
   createdAt: Date;
@@ -34,6 +41,14 @@ const BookingSchema = new Schema<IBooking>({
   reservationDate: { type: String, required: true },
   reservationTime: { type: String, required: true },
   options: { type: [BookingOptionSchema], default: [] },
+
+  memo: { type: String, default: '' },
+  symptom: { type: String, default: '' },
+  flags: {
+    keypadEntry: { type: Boolean, default: false },
+    needsParkingPass: { type: Boolean, default: false }
+  },
+
   status: { type: String, enum: ['대기', '확정', '완료', '취소'], default: '대기' },
   totalPrice: { type: Number, required: true },
   createdAt: { type: Date, default: Date.now },
