@@ -147,3 +147,43 @@ export const deleteBookingById = async (req: Request, res: Response): Promise<vo
     await User.findByIdAndDelete(id);
     res.json({ ok: true });
   };
+
+  export const getAdminBookingDetail = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const bookingId = req.params.id;
+
+    const booking = await Booking.findById(bookingId)
+      .populate('serviceType', 'label')
+      .populate('subtype', 'name')
+      .populate('options.option', 'label')
+      .lean();
+
+    if (!booking) {
+      res.status(404).json({ message: '예약을 찾을 수 없습니다.' });
+      return;
+    }
+
+    const result = {
+      _id: booking._id,
+      serviceLabel: (booking.serviceType as any)?.label ?? '',
+      subtype: (booking.subtype as any)?.name ?? '',
+      reservationDate: booking.reservationDate,
+      reservationTime: booking.reservationTime,
+      totalPrice: booking.totalPrice,
+      status: booking.status,
+      memo: booking.memo ?? '',
+      symptom: booking.symptom ?? '',
+      name: booking.name ?? '',
+      isGuest: booking.isGuest,
+      options: (booking.options ?? []).map(opt => ({
+        option: typeof opt.option === 'object' ? (opt.option as any).label : opt.option,
+        choice: opt.choice,
+      })),
+    };
+
+    res.json(result);
+  } catch (err) {
+    console.error('❌ 관리자 예약 상세 조회 실패:', err);
+    res.status(500).json({ message: '예약 상세 정보를 불러오는데 실패했습니다.' });
+  }
+};
