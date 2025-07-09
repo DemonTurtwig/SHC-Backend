@@ -28,6 +28,7 @@ export interface ISubtype extends Document {
   category: mongoose.Types.ObjectId;
   serviceOptions: mongoose.Types.ObjectId[];
   iconUrl: string;
+  memo: string;
 }
 
 const subtypeSchema = new Schema<ISubtype>({
@@ -35,6 +36,7 @@ const subtypeSchema = new Schema<ISubtype>({
   category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
   serviceOptions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'ServiceType' }],
   iconUrl: { type: String, required: false },
+  memo: {type: String, required: false }
 });
 export const Subtype = mongoose.model<ISubtype>('Subtype', subtypeSchema);
 
