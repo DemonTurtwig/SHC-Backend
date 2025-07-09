@@ -5,11 +5,6 @@ interface IBookingOption {
   choice: string;
 }
 
-interface IBookingFlags {
-  keypadEntry?: boolean;
-  needsParkingPass?: boolean;
-}
-
 interface IBooking {
   user: number | null;
   name: string | null;
@@ -21,7 +16,6 @@ interface IBooking {
   options: IBookingOption[];
   memo?: string;
   symptom?: string;
-  flags?: IBookingFlags;
   status: '대기' | '확정' | '완료' | '취소';
   totalPrice: number;
   createdAt: Date;
@@ -44,11 +38,6 @@ const BookingSchema = new Schema<IBooking>({
 
   memo: { type: String, default: '' },
   symptom: { type: String, default: '' },
-  flags: {
-    keypadEntry: { type: Boolean, default: false },
-    needsParkingPass: { type: Boolean, default: false }
-  },
-
   status: { type: String, enum: ['대기', '확정', '완료', '취소'], default: '대기' },
   totalPrice: { type: Number, required: true },
   createdAt: { type: Date, default: Date.now },
