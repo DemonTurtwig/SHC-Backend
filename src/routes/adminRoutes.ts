@@ -18,6 +18,4 @@ router.delete('/bookings/:id', deleteBookingById);
 router.patch('/users/:id/role', requireAuth, requireAdmin, updateIsAdmin);
 router.get('/users', getAllAdminUsers);
 router.delete('/users/:id', requireAuth, requireAdmin, deleteUserById);
-router.patch('/bookings/:id/price', updateBookingPrice);
-
 export default router;
