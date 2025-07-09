@@ -31,7 +31,7 @@ const BookingSchema = new Schema<IBooking>({
   name: { type: String, default: null },
   isGuest: { type: Boolean, default: false },
   subtype: { type: Schema.Types.ObjectId, ref: 'Subtype', required: true },
-  serviceType: { type: Schema.Types.ObjectId, ref: 'Servicetype', required: true },
+  serviceType: { type: Schema.Types.ObjectId, ref: 'ServiceType', required: true },
   reservationDate: { type: String, required: true },
   reservationTime: { type: String, required: true },
   options: { type: [BookingOptionSchema], default: [] },
