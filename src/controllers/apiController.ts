@@ -388,7 +388,7 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
 export const getUserBookingHistory = async (req: Request, res: Response): Promise<void> => {
   try {
     if (!req.user?.userId) {
-      res.status(401).json({ message: 'Unauthorized' });
+      res.status(401).json({ message: '로그인이 필요합니다.' });
       return;
     }
 
@@ -397,23 +397,35 @@ export const getUserBookingHistory = async (req: Request, res: Response): Promis
 
     const { startDate, endDate } = req.query as { startDate?: string; endDate?: string };
     if (startDate && endDate) {
-      filter.reservationDate = { $gte: new Date(startDate), $lte: new Date(endDate) };
+      filter.reservationDate = { $gte: startDate, $lte: endDate };
     }
 
-    const docs = await Booking.find(filter)
-    .populate('serviceType', 'label')
-    .select('serviceType reservationDate reservationTime totalPrice status')
-    .sort({ reservationDate: -1, reservationTime: -1 })
-    .lean();
-    
-    res.json(
-      docs.map((b) => ({
-        ...b,
-        serviceLabel: (b.serviceType as any).label,
-      }))
-    );
+    const bookings = await Booking.find(filter)
+      .populate('serviceType', 'label')
+      .populate('subtype', 'name')
+      .populate('options.option', 'label') // optional: include option label
+      .sort({ reservationDate: -1, reservationTime: -1 })
+      .lean();
+
+    const result = bookings.map((b) => ({
+      _id: b._id,
+      serviceLabel: (b.serviceType as any)?.label ?? '',
+      subtype: (b.subtype as any)?.name ?? '',
+      reservationDate: b.reservationDate,
+      reservationTime: b.reservationTime,
+      totalPrice: b.totalPrice,
+      status: b.status,
+      memo: b.memo ?? '',
+      symptom: b.symptom ?? '',
+      options: (b.options ?? []).map(opt => ({
+        option: opt.option && typeof opt.option === 'object' ? (opt.option as any).label : opt.option,
+        choice: opt.choice,
+      })),
+    }));
+
+    res.json(result);
   } catch (err) {
-    console.error('Booking history error:', err);
-    res.status(500).json({ message: '예약 내역을 불러오지 못했습니다.' });
+    console.error('❌ 예약 내역 조회 실패:', err);
+    res.status(500).json({ message: '예약 내역을 불러오는 중 문제가 발생했습니다.' });
   }
 };
