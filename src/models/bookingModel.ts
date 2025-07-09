@@ -1,57 +1,125 @@
-import mongoose, { Schema, model, Types } from 'mongoose';
+import mongoose, { Document, Schema } from 'mongoose';
 
-interface IBookingOption {
-  option: Types.ObjectId;
-  choice: string;
+/* ----------------------------- Category ----------------------------- */
+export interface ICategory extends Document {
+  name: string;
 }
 
-interface IBookingFlags {
-  keypadEntry?: boolean;
-  needsParkingPass?: boolean;
-}
-
-interface IBooking {
-  user: number | null;
-  name: string | null;
-  isGuest: boolean;
-  subtype: Types.ObjectId;
-  serviceType: Types.ObjectId;
-  reservationDate: string;
-  reservationTime: string;
-  options: IBookingOption[];
-  memo?: string;
-  symptom?: string;
-  flags?: IBookingFlags;
-  status: '대기' | '확정' | '완료' | '취소';
-  totalPrice: number;
-  createdAt: Date;
-}
-
-const BookingOptionSchema = new Schema<IBookingOption>({
-  option: { type: Schema.Types.ObjectId, ref: 'Option', required: true },
-  choice: { type: String, required: true }
-}, { _id: false });
-
-const BookingSchema = new Schema<IBooking>({
-  user: { type: Number, ref: 'User', default: null },
-  name: { type: String, default: null },
-  isGuest: { type: Boolean, default: false },
-  subtype: { type: Schema.Types.ObjectId, ref: 'SubType', required: true },
-  serviceType: { type: Schema.Types.ObjectId, ref: 'ServiceType', required: true },
-  reservationDate: { type: String, required: true },
-  reservationTime: { type: String, required: true },
-  options: { type: [BookingOptionSchema], default: [] },
-
-  memo: { type: String, default: '' },
-  symptom: { type: String, default: '' },
-  flags: {
-    keypadEntry: { type: Boolean, default: false },
-    needsParkingPass: { type: Boolean, default: false }
-  },
-
-  status: { type: String, enum: ['대기', '확정', '완료', '취소'], default: '대기' },
-  totalPrice: { type: Number, required: true },
-  createdAt: { type: Date, default: Date.now },
+const categorySchema = new Schema<ICategory>({
+  name: { type: String, required: true }
 });
+export const Category = mongoose.model<ICategory>('Category', categorySchema);
 
-export default model<IBooking>('Booking', BookingSchema);
+/* ----------------------------- ServiceType ----------------------------- */
+export interface IServiceType extends Document {
+  name: string;
+  label: string;
+}
+
+const serviceTypeSchema = new Schema<IServiceType>({
+  name: { type: String, required: true },
+  label: { type: String, required: true }
+});
+export const ServiceType = mongoose.model<IServiceType>('ServiceType', serviceTypeSchema, 'servicetypes');
+
+/* ----------------------------- Subtype ----------------------------- */
+export interface ISubtype extends Document {
+  name: string;
+  category: mongoose.Types.ObjectId;
+  serviceOptions: mongoose.Types.ObjectId[];
+  iconUrl: string;
+  memo: string;
+}
+
+const subtypeSchema = new Schema<ISubtype>({
+  name: { type: String, required: true },
+  category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
+  serviceOptions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'ServiceType' }],
+  iconUrl: { type: String, required: false },
+    memo: {type: String, required: false }
+});
+export const Subtype = mongoose.model<ISubtype>('Subtype', subtypeSchema);
+
+/* ----------------------------- Pricing ----------------------------- */
+export interface IPricing extends Document {
+  subtype: mongoose.Types.ObjectId;
+  serviceType: mongoose.Types.ObjectId;
+  tier: string;
+  price: number;
+  memo: string;
+}
+
+const pricingSchema = new Schema<IPricing>({
+  subtype: { type: mongoose.Schema.Types.ObjectId, ref: 'Subtype', required: true },
+  serviceType: { type: mongoose.Schema.Types.ObjectId, ref: 'ServiceType', required: true },
+  tier: { type: String, enum: ['basic', 'standard', 'premium'], required: false },
+  price: { type: Number, required: true },
+  memo: {type: String, required: false}
+});
+export const Pricing = mongoose.model<IPricing>('Pricing', pricingSchema);
+
+/* ----------------------------- Option ----------------------------- */
+export interface IOption extends Document {
+  key: string;
+  label: string;
+  appliesTo: mongoose.Types.ObjectId[];
+  serviceTypes: mongoose.Types.ObjectId[];
+  choices: {
+    value: string;
+    label: string;
+    extraCost: number;
+  }[];
+}
+
+const optionSchema = new Schema<IOption>({
+  key: { type: String, required: true },
+  label: { type: String, required: true },
+  appliesTo: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Subtype' }],
+  serviceTypes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'ServiceType' }],
+  choices: [{
+    value: String,
+    label: String,
+    extraCost: Number
+  }]
+});
+export const Option = mongoose.model<IOption>('Option', optionSchema);
+
+/* ----------------------------- Asset ----------------------------- */
+export type AssetKind = 'blueprint' | 'part' | 'video' | 'manual';
+
+export interface IAsset extends Document {
+  subtype: mongoose.Types.ObjectId;
+  serviceType: mongoose.Types.ObjectId;
+  kind: AssetKind;
+  tier?: string;
+  partId?: string;
+  label?: string;
+  url: string;
+  steps?: string[];
+}
+
+const assetSchema = new Schema<IAsset>({
+  subtype: { type: mongoose.Schema.Types.ObjectId, ref: 'Subtype', required: true },
+  serviceType: { type: mongoose.Schema.Types.ObjectId, ref: 'ServiceType', required: true },
+  kind: { type: String, enum: ['blueprint', 'part', 'video', 'manual'], required: true },
+  tier: { type: String },
+  partId: { type: String },
+  label: { type: String },
+  url: { type: String, required: true },
+  steps: [String]
+});
+export const Asset = mongoose.model<IAsset>('Asset', assetSchema);
+
+/* ----------------------------- TimeSlot ----------------------------- */
+export interface ITimeSlot extends Document {
+  date: Date | null;
+  type: string;
+  slots: string[];
+}
+
+const timeSlotSchema = new Schema<ITimeSlot>({
+  date: { type: Date, default: null },
+  type: { type: String, required: true },
+  slots: [{ type: String }]
+});
+export const TimeSlot = mongoose.model<ITimeSlot>('TimeSlot', timeSlotSchema);
