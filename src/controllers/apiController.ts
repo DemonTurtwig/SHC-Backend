@@ -10,6 +10,7 @@ import { TimeSlot } from '../models/timeslotModel';
 import { Option } from '../models/applianceModel';
 import { Pricing } from '../models/applianceModel';
 import { yyyymmdd } from '../utils/formatDate';
+import mongoose from 'mongoose';
 
 const JWT_SECRET = process.env.JWT_SECRET as string;
 
