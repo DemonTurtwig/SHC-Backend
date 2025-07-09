@@ -36,7 +36,7 @@ const subtypeSchema = new Schema<ISubtype>({
   category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
   serviceOptions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'ServiceType' }],
   iconUrl: { type: String, required: false },
-  memo: {type: String, required: false }
+    memo: {type: String, required: false }
 });
 export const Subtype = mongoose.model<ISubtype>('Subtype', subtypeSchema);
 
@@ -46,13 +46,15 @@ export interface IPricing extends Document {
   serviceType: mongoose.Types.ObjectId;
   tier: string;
   price: number;
+  memo: string;
 }
 
 const pricingSchema = new Schema<IPricing>({
   subtype: { type: mongoose.Schema.Types.ObjectId, ref: 'Subtype', required: true },
   serviceType: { type: mongoose.Schema.Types.ObjectId, ref: 'ServiceType', required: true },
   tier: { type: String, enum: ['standard', 'deluxe', 'premium'], required: false },
-  price: { type: Number, required: true }
+  price: { type: Number, required: true },
+  memo: {type: String, required: false}
 });
 export const Pricing = mongoose.model<IPricing>('Pricing', pricingSchema);
 
