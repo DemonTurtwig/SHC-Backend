@@ -35,7 +35,7 @@ const BookingSchema = new Schema<IBooking>({
   reservationDate: { type: String, required: true },
   reservationTime: { type: String, required: true },
   options: { type: [BookingOptionSchema], default: [] },
-
+  tier: { type: String, required: false },
   memo: { type: String, default: '' },
   symptom: { type: String, default: '' },
   status: { type: String, enum: ['대기', '확정', '완료', '취소'], default: '대기' },
