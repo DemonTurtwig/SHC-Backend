@@ -419,22 +419,44 @@ export const getUserBookingHistory = async (req: Request, res: Response): Promis
 export const getUserBookingDetail = async (req: Request, res: Response): Promise<void> => {
   try {
     if (!req.user?.userId) {
+      console.warn('🔒 Missing userId in request');
       res.status(401).json({ message: '로그인이 필요합니다.' });
       return;
     }
 
     const bookingId = req.params.id;
+    console.log(`📥 Requested bookingId: ${bookingId}`);
+    console.log(`🔐 Requesting userId: ${req.user.userId}`);
 
-    const booking = await Booking.findOne({ _id: bookingId, user: req.user.userId })
+    if (!mongoose.Types.ObjectId.isValid(bookingId)) {
+      console.warn('⚠️ Invalid bookingId format');
+      res.status(400).json({ message: '잘못된 예약 ID 형식입니다.' });
+      return;
+    }
+
+    const filter = {
+      _id: bookingId,
+      user: req.user.userId,
+    };
+    console.log('🔍 MongoDB Query Filter:', filter);
+
+    const booking = await Booking.findOne(filter)
       .populate('serviceType', 'label')
       .populate('subtype', 'name')
       .populate('options.option', 'label')
       .lean();
 
     if (!booking) {
+      console.warn('❌ Booking not found or access denied');
       res.status(404).json({ message: '예약 정보를 찾을 수 없습니다.' });
       return;
     }
+
+    console.log('✅ Booking found:', {
+      _id: booking._id,
+      serviceType: booking.serviceType,
+      subtype: booking.subtype,
+    });
 
     const result = {
       _id: booking._id,
@@ -447,11 +469,14 @@ export const getUserBookingDetail = async (req: Request, res: Response): Promise
       memo: booking.memo ?? '',
       symptom: booking.symptom ?? '',
       options: (booking.options ?? []).map(opt => ({
-        option: typeof opt.option === 'object' ? (opt.option as any).label : opt.option,
+        option: (opt.option && typeof opt.option === 'object')
+          ? (opt.option as any).label
+          : String(opt.option),
         choice: opt.choice,
       })),
     };
 
+    console.log('📦 Final response:', result);
     res.json(result);
   } catch (err) {
     console.error('❌ 예약 상세 조회 실패:', err);
