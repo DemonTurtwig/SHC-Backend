@@ -42,22 +42,34 @@ export const getBookingInitializeData = async (req: Request, res: Response): Pro
                 p.serviceType.equals(serviceId)
             );
 
-            const tiers = matchedPricings.map((pr) => {
-              const blueprint = assets.find(
-                (a) =>
-                  a.subtype.equals(subtypeId) &&
-                  a.serviceType.equals(serviceId) &&
-                  a.kind === 'blueprint' &&
-                  a.tier === pr.tier
-              );
+           const tiers = matchedPricings.length > 0
+  ? matchedPricings.map(pr => {
+      const blueprint = assets.find(...);
+      const parts = assets.filter(...);
+      return {
+        tier: pr.tier,
+        price: pr.price,
+        extraTime: pr.extraTime,
+        assets: {
+          blueprint: blueprint?.url || null,
+          parts: parts.map(p => ({
+            label: p.label,
+            partId: p.partId,
+            url: p.url
+          }))
+        }
+      };
+    })
+  : [{
+      tier: 'standard',
+      price: -1, // 가격문의 fallback
+      extraTime: 0,
+      assets: {
+        blueprint: null,
+        parts: []
+      }
+    }];
 
-              const parts = assets.filter(
-                (a) =>
-                  a.subtype.equals(subtypeId) &&
-                  a.serviceType.equals(serviceId) &&
-                  a.kind === 'part' &&
-                  a.tier === pr.tier
-              );
 
               return {
                 tier: pr.tier,
