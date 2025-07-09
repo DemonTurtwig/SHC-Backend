@@ -342,7 +342,7 @@ export const getAllServiceTypes = async (req: Request, res: Response) => {
 };
 
 export const createBooking = async (req: Request, res: Response): Promise<void> => {
-  const { subtypeId, serviceTypeId, tier, options, reservationDate, reservationTime, totalPrice, memo, symptom, flags} = req.body;
+  const { subtypeId, serviceTypeId, tier, options, reservationDate, reservationTime, totalPrice, memo, symptom} = req.body;
 
   try {
     const existingBooking = await Booking.findOne({ reservationDate, reservationTime });
@@ -373,7 +373,6 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
   totalPrice,
   memo,
   symptom,
-  flags,
 });
     await newBooking.save();
     res.status(201).json({ message: '예약이 완료되었습니다.' });
