@@ -164,23 +164,23 @@ export const deleteBookingById = async (req: Request, res: Response): Promise<vo
     }
 
     const result = {
-      _id: booking._id,
-      serviceLabel: (booking.serviceType as any)?.label ?? '',
-      subtype: (booking.subtype as any)?.name ?? '',
-      reservationDate: booking.reservationDate,
-      reservationTime: booking.reservationTime,
-      totalPrice: booking.totalPrice,
-      status: booking.status,
-      memo: booking.memo ?? '',
-      symptom: booking.symptom ?? '',
-      name: booking.name ?? '',
-      isGuest: booking.isGuest,
-      options: (booking.options ?? []).map(opt => ({
-        option: typeof opt.option === 'object' ? (opt.option as any).label : opt.option,
-        choice: opt.choice,
-      })),
-    };
-
+  _id: booking._id,
+  serviceLabel: (booking.serviceType as any)?.label ?? '',
+  subtype: (booking.subtype as any)?.name ?? '',
+  reservationDate: booking.reservationDate,
+  reservationTime: booking.reservationTime,
+  totalPrice: booking.totalPrice,
+  status: booking.status,
+  memo: booking.memo ?? '',
+  symptom: booking.symptom ?? '',
+  tier: booking.tier ?? '', // ✅ Add this line
+  name: booking.name ?? '',
+  isGuest: booking.isGuest,
+  options: (booking.options ?? []).map(opt => ({
+    option: typeof opt.option === 'object' ? (opt.option as any).label : opt.option,
+    choice: opt.choice,
+  })),
+};
     res.json(result);
   } catch (err) {
     console.error('❌ 관리자 예약 상세 조회 실패:', err);
