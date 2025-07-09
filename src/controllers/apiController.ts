@@ -393,7 +393,7 @@ export const getUserBookingHistory = async (req: Request, res: Response): Promis
     }
 
     const userId = Number(req.user.userId);
-    const filter: any = { user: userId };
+    const filter: any = { user: req.user._id };
 
     const { startDate, endDate } = req.query as { startDate?: string; endDate?: string };
     if (startDate && endDate) {
