@@ -15,6 +15,7 @@ interface IBooking {
   reservationTime: string;
   options: IBookingOption[];
   memo?: string;
+  tier?: string;
   symptom?: string;
   status: '대기' | '확정' | '완료' | '취소';
   totalPrice: number;
