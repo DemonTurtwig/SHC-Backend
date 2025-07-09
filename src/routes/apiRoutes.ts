@@ -1,6 +1,6 @@
 // src/routes/apiRoutes.ts
 import express from 'express';
-import { registerUser, updateUser, createBooking, getOptions, getPricing, getCurrentUser, loginUser, deleteUser, getAllServiceTypes, getAvailableTimeSlots, getUserBookingHistory} from '../controllers/apiController';
+import { registerUser, getUserBookingDetail, updateUser, createBooking, getOptions, getPricing, getCurrentUser, loginUser, deleteUser, getAllServiceTypes, getAvailableTimeSlots, getUserBookingHistory} from '../controllers/apiController';
 import { kakaoLogin, deleteKakaoAccount, searchKakaoAddress, searchExpandedRoad } from '../controllers/kakaoController';
 import { requireAuth } from '../middleware/authMiddleware';
 import { getBookingInitializeData } from '../controllers/bookingController';
@@ -24,4 +24,5 @@ router.patch('/users/me', requireAuth, updateUser);
 router.get('/kakao/expand-address', searchExpandedRoad);
 router.delete('/kakao/delete', requireAuth, deleteKakaoAccount);
 router.post('/kakao/delete', requireAuth, deleteKakaoAccount);
+router.get('/historydetail/:id', requireAuth, getUserBookingDetail);
 export default router;
