@@ -1,4 +1,3 @@
-// controllers/bookingController.ts
 import { Request, Response } from 'express';
 import { Types } from 'mongoose';
 import {
@@ -27,72 +26,72 @@ export const getBookingInitializeData = async (req: Request, res: Response): Pro
 
         const enrichedServices = await Promise.all(
           subtype.serviceOptions.map(async (service) => {
-            // 🛡️ Defensive: skip invalid populated Object
             if (!service || typeof service !== 'object' || !service._id) return null;
 
             const serviceId = new Types.ObjectId(service._id);
-            const fullService = services.find(
-              (s) => String(s._id) === String(serviceId)
-            );
+            const fullService = services.find(s => String(s._id) === String(serviceId));
             if (!fullService) return null;
 
             const matchedPricings = pricings.filter(
-              (p) =>
-                p.subtype.equals(subtypeId) &&
-                p.serviceType.equals(serviceId)
+              (p) => p.subtype.equals(subtypeId) && p.serviceType.equals(serviceId)
             );
 
-           const tiers = matchedPricings.length > 0
-  ? matchedPricings.map(pr => {
-      const blueprint = assets.find(...);
-      const parts = assets.filter(...);
-      return {
-        tier: pr.tier,
-        price: pr.price,
-        extraTime: pr.extraTime,
-        assets: {
-          blueprint: blueprint?.url || null,
-          parts: parts.map(p => ({
-            label: p.label,
-            partId: p.partId,
-            url: p.url
-          }))
-        }
-      };
-    })
-  : [{
-      tier: 'standard',
-      price: -1, // 가격문의 fallback
-      extraTime: 0,
-      assets: {
-        blueprint: null,
-        parts: []
-      }
-    }];
+            const tiers = matchedPricings.length > 0
+              ? matchedPricings.map((pr) => {
+                  const blueprint = assets.find(
+                    (a) =>
+                      a.subtype.equals(subtypeId) &&
+                      a.serviceType.equals(serviceId) &&
+                      a.kind === 'blueprint' &&
+                      a.tier === pr.tier
+                  );
 
+                  const parts = assets.filter(
+                    (a) =>
+                      a.subtype.equals(subtypeId) &&
+                      a.serviceType.equals(serviceId) &&
+                      a.kind === 'part' &&
+                      a.tier === pr.tier
+                  );
 
-              return {
-                tier: pr.tier,
-                price: pr.price,
-                extraTime: pr.extraTime,
-                assets: {
-                  blueprint: blueprint?.url || null,
-                  parts: parts.map((p) => ({
-                    label: p.label,
-                    partId: p.partId,
-                    url: p.url,
-                  })),
-                },
-              };
-            });
+                  return {
+                    tier: pr.tier,
+                    price: pr.price,
+                    extraTime: pr.extraTime,
+                    assets: {
+                      blueprint: blueprint?.url || null,
+                      parts: parts.map((p) => ({
+                        label: p.label,
+                        partId: p.partId,
+                        url: p.url,
+                      })),
+                    },
+                  };
+                })
+              : [
+                  {
+                    tier: 'standard',
+                    price: -1, // 가격문의 fallback
+                    extraTime: 0,
+                    assets: {
+                      blueprint: null,
+                      parts: [],
+                    },
+                  },
+                ];
 
-            const relatedOptions = options.filter((opt) =>
-              opt.appliesTo.some((id) =>
-                id instanceof Types.ObjectId
-                  ? id.equals(subtypeId)
-                  : String(id) === String(subtypeId)
+            const relatedOptions = options
+              .filter(
+                (opt) =>
+                  opt.appliesTo.some((id) => String(id) === String(subtypeId)) &&
+                  opt.serviceTypes?.some((id) => String(id) === String(serviceId))
               )
-            );
+              .map((opt) => ({
+                _id: opt._id,
+                key: opt.key,
+                label: opt.label,
+                choices: opt.choices,
+              }));
 
             return {
               _id: fullService._id,
@@ -104,9 +103,7 @@ export const getBookingInitializeData = async (req: Request, res: Response): Pro
           })
         );
 
-        const filteredServices = enrichedServices.filter(
-          (svc) => svc !== null
-        );
+        const filteredServices = enrichedServices.filter((svc) => svc !== null);
 
         return {
           _id: subtype._id,
