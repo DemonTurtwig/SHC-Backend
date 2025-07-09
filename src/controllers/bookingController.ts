@@ -57,6 +57,7 @@ export const getBookingInitializeData = async (req: Request, res: Response): Pro
                   return {
                     tier: pr.tier,
                     price: pr.price,
+                     memo: pr.memo || null,
                     assets: {
                       blueprint: blueprint?.url || null,
                       parts: parts.map((p) => ({
