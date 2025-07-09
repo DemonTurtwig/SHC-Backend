@@ -68,24 +68,35 @@ export const filterAdminBookings = async (req: Request, res: Response) => {
 
 
 // PATCH /api/admin/bookings/:id/status
-export const updateBookingStatus = async (req: Request, res: Response):Promise<void> => {
+export const updateBookingStatus = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, totalPrice, options } = req.body;
 
-    const updated = await Booking.findByIdAndUpdate(
-      id,
-      { status },
-      { new: true }
-    );
+    const updatePayload: Partial<{
+      status: '대기' | '확정' | '완료' | '취소';
+      totalPrice: number;
+      options: { option: string; choice: string }[];
+    }> = {};
 
-    if (!updated) res.status(404).json({ message: '예약을 찾을 수 없습니다.' });
+    if (status) updatePayload.status = status;
+    if (typeof totalPrice === 'number') updatePayload.totalPrice = totalPrice;
+    if (Array.isArray(options)) updatePayload.options = options;
+
+    const updated = await Booking.findByIdAndUpdate(id, updatePayload, {
+      new: true,
+    });
+
+    if (!updated) {
+      res.status(404).json({ message: '예약을 찾을 수 없습니다.' });
+      return;
+    }
+
     res.json(updated);
-    return;
   } catch (err) {
-    res.status(500).json({ message: '상태 업데이트 실패' });
+    console.error(err);
+    res.status(500).json({ message: '상태/가격/옵션 업데이트 실패' });
   }
-  return;
 };
 
 // DELETE /api/admin/bookings/:id
