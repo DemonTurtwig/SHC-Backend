@@ -469,6 +469,7 @@ export const getUserBookingDetail = async (req: Request, res: Response): Promise
       status: booking.status,
       memo: booking.memo ?? '',
       symptom: booking.symptom ?? '',
+      tier: booking.tier ?? '',
       options: (booking.options ?? []).map(opt => ({
         option: (opt.option && typeof opt.option === 'object')
           ? (opt.option as any).label
