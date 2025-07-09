@@ -136,27 +136,3 @@ export const deleteBookingById = async (req: Request, res: Response): Promise<vo
     await User.findByIdAndDelete(id);
     res.json({ ok: true });
   };
-
-  // PATCH /api/admin/bookings/:id/price
-export const updateBookingPrice = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { id } = req.params;
-    const { totalPrice, updatedOptions } = req.body;
-
-    const updateFields: any = {};
-    if (typeof totalPrice === 'number') updateFields.totalPrice = totalPrice;
-    if (Array.isArray(updatedOptions)) updateFields.options = updatedOptions;
-
-    const updated = await Booking.findByIdAndUpdate(id, updateFields, { new: true });
-
-    if (!updated) {
-      res.status(404).json({ message: '예약을 찾을 수 없습니다.' });
-      return;
-    }
-
-    res.json(updated);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: '가격 수정 실패' });
-  }
-};
