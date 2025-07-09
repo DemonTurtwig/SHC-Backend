@@ -22,7 +22,6 @@ const serviceTypeSchema = new Schema<IServiceType>({
 });
 export const ServiceType = mongoose.model<IServiceType>('ServiceType', serviceTypeSchema, 'servicetypes');
 
-
 /* ----------------------------- Subtype ----------------------------- */
 export interface ISubtype extends Document {
   name: string;
@@ -45,15 +44,13 @@ export interface IPricing extends Document {
   serviceType: mongoose.Types.ObjectId;
   tier: string;
   price: number;
-  extraTime?: number;
 }
 
 const pricingSchema = new Schema<IPricing>({
   subtype: { type: mongoose.Schema.Types.ObjectId, ref: 'Subtype', required: true },
   serviceType: { type: mongoose.Schema.Types.ObjectId, ref: 'ServiceType', required: true },
   tier: { type: String, enum: ['standard', 'deluxe', 'premium'], required: false },
-  price: { type: Number, required: true },
-  extraTime: { type: Number, default: 0 }
+  price: { type: Number, required: true }
 });
 export const Pricing = mongoose.model<IPricing>('Pricing', pricingSchema);
 
@@ -62,10 +59,10 @@ export interface IOption extends Document {
   key: string;
   label: string;
   appliesTo: mongoose.Types.ObjectId[];
+  serviceTypes: mongoose.Types.ObjectId[];
   choices: {
     value: string;
     label: string;
-    extraTime: number;
     extraCost: number;
   }[];
 }
@@ -74,10 +71,10 @@ const optionSchema = new Schema<IOption>({
   key: { type: String, required: true },
   label: { type: String, required: true },
   appliesTo: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Subtype' }],
+  serviceTypes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'ServiceType' }],
   choices: [{
     value: String,
     label: String,
-    extraTime: Number,
     extraCost: Number
   }]
 });
@@ -122,4 +119,3 @@ const timeSlotSchema = new Schema<ITimeSlot>({
   slots: [{ type: String }]
 });
 export const TimeSlot = mongoose.model<ITimeSlot>('TimeSlot', timeSlotSchema);
-
