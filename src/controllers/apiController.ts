@@ -416,3 +416,45 @@ export const getUserBookingHistory = async (req: Request, res: Response): Promis
     res.status(500).json({ message: '예약 내역을 불러오지 못했습니다.' });
   }
 };
+export const getUserBookingDetail = async (req: Request, res: Response): Promise<void> => {
+  try {
+    if (!req.user?.userId) {
+      res.status(401).json({ message: '로그인이 필요합니다.' });
+      return;
+    }
+
+    const bookingId = req.params.id;
+
+    const booking = await Booking.findOne({ _id: bookingId, user: req.user.userId })
+      .populate('serviceType', 'label')
+      .populate('subtype', 'name')
+      .populate('options.option', 'label')
+      .lean();
+
+    if (!booking) {
+      res.status(404).json({ message: '예약 정보를 찾을 수 없습니다.' });
+      return;
+    }
+
+    const result = {
+      _id: booking._id,
+      serviceLabel: (booking.serviceType as any)?.label ?? '',
+      subtype: (booking.subtype as any)?.name ?? '',
+      reservationDate: booking.reservationDate,
+      reservationTime: booking.reservationTime,
+      totalPrice: booking.totalPrice,
+      status: booking.status,
+      memo: booking.memo ?? '',
+      symptom: booking.symptom ?? '',
+      options: (booking.options ?? []).map(opt => ({
+        option: typeof opt.option === 'object' ? (opt.option as any).label : opt.option,
+        choice: opt.choice,
+      })),
+    };
+
+    res.json(result);
+  } catch (err) {
+    console.error('❌ 예약 상세 조회 실패:', err);
+    res.status(500).json({ message: '예약 상세 정보를 불러오는 중 문제가 발생했습니다.' });
+  }
+};
