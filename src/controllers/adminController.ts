@@ -7,7 +7,7 @@ export const getAllBookings = async (req: Request, res: Response) => {
   try {
     const bookings = await Booking.find().sort({ reservationDate: -1 });
 
-    const users = await User.find({}, 'userId address phone'); // only pull fields we need
+    const users = await User.find({}, 'userId address phone'); // only pull fields that are necessary
 
     const enriched = bookings.map((booking) => {
     const user = users.find((u) => u.userId === booking.user);
