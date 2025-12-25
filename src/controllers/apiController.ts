@@ -26,14 +26,14 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
       addressDetail,
     } = req.body;
 
-    // —— Guest registration branch ——
+    // Guest Registration
     if (isGuest === true) {
       if (!name || !phone || !address) {
         res.status(400).json({ message: '비회원은 이름·휴대폰·주소가 필요합니다.' });
         return;
       }
     
-      // 🧠 Check if a guest already exists with the same phone
+      // Check if a guest already exists with the same PN
       const existingGuest = await User.findOne({ phone, isGuest: true });
       if (existingGuest) {
         res.status(409).json({ message: '이미 등록된 비회원 전화번호입니다.' });
@@ -77,7 +77,7 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
     }
     
 
-    // —— Standard registration branch ——
+    // Standard Registration
     if (!name || !phone || !email || !password || !address) {
       res.status(400).json({ message: '모든 필드를 입력해주세요.' });
       return;
@@ -90,7 +90,7 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
     }
 
     const hashed = await bcrypt.hash(password, 10);
-    const newUserId = await generateUserId(); // also assign to standard users
+    const newUserId = await generateUserId(); // this UserId is also assigned to standard users
 
     const user = new User({
       userId: newUserId,
@@ -260,7 +260,7 @@ export const getOptions = async (req: Request, res: Response): Promise<void> => 
   }
 };
 
-// --- GET /api/pricing?subtype=...&serviceType=...
+// Fetch prices from DB
 
 export const getPricing = async (req: Request, res: Response): Promise<void> => {
   try {
