@@ -173,7 +173,7 @@ export const deleteBookingById = async (req: Request, res: Response): Promise<vo
   status: booking.status,
   memo: booking.memo ?? '',
   symptom: booking.symptom ?? '',
-  tier: booking.tier ?? '', // ✅ Add this line
+  tier: booking.tier ?? '',
   name: booking.name ?? '',
   isGuest: booking.isGuest,
   options: (booking.options ?? []).map(opt => ({
