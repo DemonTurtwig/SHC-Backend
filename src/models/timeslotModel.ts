@@ -1,3 +1,5 @@
+// src/models/timeslotModel.ts
+
 import mongoose, { Schema, model, Types } from 'mongoose';
 
 interface ITimeSlot {

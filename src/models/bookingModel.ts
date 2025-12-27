@@ -1,3 +1,5 @@
+// src/models/bookingModel.ts
+
 import mongoose, { Schema, model, Types } from 'mongoose';
 
 interface IBookingOption {

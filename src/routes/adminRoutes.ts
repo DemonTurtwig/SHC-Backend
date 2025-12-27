@@ -1,3 +1,5 @@
+// src/routes/adminRoutes.ts
+
 import express from 'express';
 import { requireAuth, requireAdmin } from '../middleware/authMiddleware';
 import {getAllBookings, getAdminBookingDetail, filterAdminBookings, deleteBookingById, updateBookingStatus, updateIsAdmin, getAllAdminUsers, deleteUserById} from '../controllers/adminController';
@@ -10,7 +12,7 @@ router.use('/', requireAuth, requireAdmin);
 // Ensure all routes are protected
 router.use(requireAuth, requireAdmin);
 
-// --- Booking Management
+// Booking Management
 router.get('/bookings', getAllBookings);
 router.post('/bookings/filter', filterAdminBookings);
 router.patch('/bookings/:id/status', updateBookingStatus);

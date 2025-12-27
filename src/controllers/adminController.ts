@@ -1,3 +1,5 @@
+// src/adminController.ts
+
 import { Request, Response } from 'express';
 import Booking from '../models/bookingModel';
 import User from '../models/User';

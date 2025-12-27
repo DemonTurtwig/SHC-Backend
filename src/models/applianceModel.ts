@@ -1,6 +1,8 @@
+// src/models/applianceModel.ts
+
 import mongoose, { Document, Schema } from 'mongoose';
 
-/* ----------------------------- Category ----------------------------- */
+//Category
 export interface ICategory extends Document {
   name: string;
 }
@@ -10,7 +12,7 @@ const categorySchema = new Schema<ICategory>({
 });
 export const Category = mongoose.model<ICategory>('Category', categorySchema);
 
-/* ----------------------------- ServiceType ----------------------------- */
+//ServiceType
 export interface IServiceType extends Document {
   name: string;
   label: string;
@@ -22,7 +24,7 @@ const serviceTypeSchema = new Schema<IServiceType>({
 });
 export const ServiceType = mongoose.model<IServiceType>('ServiceType', serviceTypeSchema, 'servicetypes');
 
-/* ----------------------------- Subtype ----------------------------- */
+//Subtype
 export interface ISubtype extends Document {
   name: string;
   category: mongoose.Types.ObjectId;
@@ -40,7 +42,7 @@ const subtypeSchema = new Schema<ISubtype>({
 });
 export const Subtype = mongoose.model<ISubtype>('Subtype', subtypeSchema);
 
-/* ----------------------------- Pricing ----------------------------- */
+//Pricing
 export interface IPricing extends Document {
   subtype: mongoose.Types.ObjectId;
   serviceType: mongoose.Types.ObjectId;
@@ -58,7 +60,7 @@ const pricingSchema = new Schema<IPricing>({
 });
 export const Pricing = mongoose.model<IPricing>('Pricing', pricingSchema);
 
-/* ----------------------------- Option ----------------------------- */
+//Option
 export interface IOption extends Document {
   key: string;
   label: string;
@@ -84,7 +86,7 @@ const optionSchema = new Schema<IOption>({
 });
 export const Option = mongoose.model<IOption>('Option', optionSchema);
 
-/* ----------------------------- Asset ----------------------------- */
+//Asset
 export type AssetKind = 'blueprint' | 'part' | 'video' | 'manual';
 
 export interface IAsset extends Document {
@@ -110,7 +112,7 @@ const assetSchema = new Schema<IAsset>({
 });
 export const Asset = mongoose.model<IAsset>('Asset', assetSchema);
 
-/* ----------------------------- TimeSlot ----------------------------- */
+//TimeSlot
 export interface ITimeSlot extends Document {
   date: Date | null;
   type: string;

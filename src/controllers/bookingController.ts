@@ -1,3 +1,5 @@
+// src/controllers/bookingController.ts
+
 import { Request, Response } from 'express';
 import { Types } from 'mongoose';
 import {

@@ -187,7 +187,7 @@ export const getAvailableTimeSlots = async (
   res: Response,
 ): Promise<void> => {
   try {
-    /* 1️⃣ validate + parse */
+    // validate + parse
     const dateStr = String(req.query.date ?? '').trim(); // "2025-06-06"
     const dateObj = dateStr ? new Date(dateStr) : new Date();
 
@@ -198,7 +198,7 @@ export const getAvailableTimeSlots = async (
 
     const yyyyMMdd = yyyymmdd(dateObj); 
 
-    /* 2️⃣ master timeslot document */
+    // timeslot finder
     const doc = await TimeSlot.findOne();
 if (!doc) {
   res.json([]);               // nothing configured

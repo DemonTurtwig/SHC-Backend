@@ -1,3 +1,5 @@
+// src/services/appleService.ts
+
 import { jwtVerify, createRemoteJWKSet, JWTPayload } from 'jose';
 
 const APPLE_JWKS_URL = new URL('https://appleid.apple.com/auth/keys');

@@ -1,3 +1,5 @@
+// src/utils/generateUserId.ts
+
 import Counter from '../models/Counter';
 import User from '../models/User';
 
