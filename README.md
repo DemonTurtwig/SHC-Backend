@@ -71,15 +71,15 @@ npm run dev
 npm run build
 npm start
 
-# API
+## API
 
-## Base URL
+### Base URL
 
 Local: http://localhost:5000
 
 Routes are mounted under /api and /api/admin
 
-## Authentication
+### Authentication
 
 Endpoints marked (Auth) require a JWT: Authorization: Bearer <token>
 
@@ -153,7 +153,7 @@ PATCH /api/admin/users/:id/role — Set/unset admin role
 
 DELETE /api/admin/users/:id — Delete user by id
 
-# Example Requests
+## Example Requests
 Register
 curl -X POST http://localhost:5000/api/register \
   -H "Content-Type: application/json" \
@@ -190,7 +190,7 @@ curl -X POST http://localhost:5000/api/booking \
     "totalPrice":100000
   }'
 
-# Project Structure
+## Project Structure
 src/
   config/        # MongoDB connection
   controllers/   # Route handlers (API + admin + booking + oauth)
@@ -200,7 +200,7 @@ src/
   services/      # Kakao & Apple auth helpers
   utils/         # helpers (date formatting, userId generator)
 
-# Known Issues / Notes
+## Known Issues / Notes
 
 src/index.ts defines PORT but currently starts the server with app.listen(5000, ...).
 If you want PORT to work, change it to:
@@ -210,7 +210,7 @@ app.listen(PORT, '0.0.0.0', () => console.log(`✅ Server running on :${PORT}`))
 
 Some collections (ServiceType/Subtype/Option/Pricing/Asset/TimeSlot) must exist for booking initialization endpoints to return meaningful data.
 
-# Ownership & Attribution
+## Ownership & Attribution
 
 This repository is maintained and owned by Truss.
 
